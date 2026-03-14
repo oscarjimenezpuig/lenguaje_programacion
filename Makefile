@@ -82,6 +82,6 @@ check:
 #MAKEFILE VARIABLE
 
 NAME = lp 
-SCRS = memoria.c
-INCLUDES = #-lX11
+SCRS = value.c ula.c
+INCLUDES = #-lncurses #-lX11
 
