@@ -8,6 +8,8 @@
 
 #define EOS '\0' /* indicativo del final de string */
 
+#define VALNUL "" /* valor nulo de los valores */ 
+
 typedef char* Value;
 
 Value valnew(char tip_num,...);

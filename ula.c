@@ -44,17 +44,4 @@ Value ulagrt(Value a,Value b) {
 #undef gvb
 
 
-/* prueba */
-
-int main() {
-    Value a=valnew(1,22.0);
-    Value b=valnew(1,23.0);
-    Value c=ulagrt(a,b);
-    printf("%s   %s   =   %s\n",a,b,c);
-    valdel(&a);
-    valdel(&b);
-    valdel(&c);
-    return valerr();
-}
-
 
