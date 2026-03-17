@@ -82,6 +82,6 @@ check:
 #MAKEFILE VARIABLE
 
 NAME = lp 
-SCRS = value.c ula.c variable.c
+SCRS = value.c variable.c stack.c ula.c inout.c
 INCLUDES = #-lncurses #-lX11
 

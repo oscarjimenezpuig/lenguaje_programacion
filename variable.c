@@ -5,14 +5,28 @@
 Variable variable=NULL;
 static int variables=0;
 
+static int comnom(Value vnom,char* nom) {
+    if(nom) {
+        char* pv=vnom;
+        char* pn=nom;
+        while(*pn!=EOS) {
+            if(*pn!=*pv) return 0;
+            pn++;
+            pv++;
+        }
+        return (*pv==EOS);
+    }
+    return 0;
+}
+
 static struct variable_s* varfnd(Value nom) {
     /* busqueda de variable por nombre */
     struct variable_s* pv=variable;
     while(pv!=NULL) {
-        if(ulaequ(nom,pv->nom)) break;
+        if(comnom(pv->nom,nom)) break;
         pv=pv->nxt;
     }
-    return NULL;
+    return pv;
 }
 
 static Value varnom(char* nom) {
@@ -25,44 +39,59 @@ static Value varnom(char* nom) {
 }
 
 int varset(char* nom,Value val) {
-    if(!nom || !val) return 0;
-    Value vnom=varnom(nom);
-    struct variable_s* pv=varfnd(vnom);
-    if(pv) {
-        if(!ulaequ(val,pv->val)) {
-            valdel(&pv->val);
-            pv->val=val;
+    if(val) {
+        struct variable_s* pv=varfnd(nom);
+        if(pv) {
+            if(comnom(val,pv->val)) {
+                valdel(&pv->val);
+                pv->val=val;
+            }
+            return 1;
+        } else {
+            Value vnom=varnom(nom);
+            if(vnom) {
+                struct variable_s* nsv=malloc(sizeof(struct variable_s));
+                if(nsv) {
+                    ++variables;
+                    nsv->nom=vnom;
+                    nsv->val=val;
+                    nsv->nxt=variable;
+                    variable=nsv;
+                    return 1;
+                } else {
+                    valdel(&vnom);
+                }
+            }
         }
-        valdel(&vnom);
-    } else {
-        struct variable_s* nsv=malloc(sizeof(struct variable_s));
-        if(nsv) {
-            ++variables;
-            nsv->nom=vnom;
-            nsv->val=val;
-            nsv->nxt=variable;
-            variable=nsv;
-        } else return 0;
     }
-    return 1;
+    return 0;
 }
 
 Value varget(char* nom) {
     Value ret=NULL;
-    Value vnom=valnew(0,nom);
-    struct variable_s* ps=varfnd(vnom);
-    if(ps) ret=ps->val;
-    valdel(&vnom);
+    struct variable_s* ps=varfnd(nom);
+    if(ps) ret=valcpy(ps->val);
     return ret;
+}
+
+size_t varsiz() {
+    struct variable_s* pv=variable;
+    size_t counter=0;
+    while(pv!=NULL) {
+        ++counter;
+        pv=pv->nxt;
+    }
+    return counter;
 }
 
 void vardel() {
     struct variable_s* ps=variable;
     while(ps!=NULL) {
-        valdel(&(ps->nom));
-        valdel(&(ps->val));
         struct variable_s* tdel=ps;
-        ps=ps->nxt;
+        ps=tdel->nxt;
+        printf("%p (%s %s)\n",tdel,tdel->nom,tdel->val);//dbg
+        valdel(&(tdel->nom));
+        valdel(&(tdel->val));
         free(tdel);
         --variables;
     }
@@ -70,23 +99,6 @@ void vardel() {
 
 int varerr() {
     return variables;
-}
-
-/* prueba */
-
-static void prtval(Value a) {
-    printf("%s\n",a);
-}
-
-int main() {
-    Value a=valnew(1,22.0);
-    if(varset("hola",a)) {
-        Value b=varget("hola");
-        prtval(b);
-        valdel(&b);
-    }
-    vardel();
-    return valerr()+1000*varerr();
 }
 
 

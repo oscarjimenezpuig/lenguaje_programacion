@@ -1,27 +1,27 @@
 /* LP 14-3-26 */
 
-#include "value.h"
+#include "stack.h"
 
-/* devolucion de valores numericos */
+/* operacion con valores que se cogen de la pila y se devuelven a ella */
 
-Value ulaadd(Value a,Value b);
+int ulaadd();
 /* suma */
 
-Value ulaop(Value a);
+int ulaop();
 /* opuesto */
 
-Value ulaprd(Value a,Value b);
+int ulaprd();
 /* producto */
 
-Value ulainv(Value a); 
+int ulainv(); 
 /* inverso */
 
 /* devolucion de valores booleanos */
 
-Value ulaequ(Value a,Value b);
+int ulaequ();
 /* igualdad entre dos valores, devuelve valor booleano */
 
-Value ulagrt(Value a,Value b);
+int ulagrt();
 /* dice si a mayor que b (punto de vista numerico) */
 
 

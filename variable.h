@@ -2,7 +2,7 @@
 
 /* Una variable es un nombre (solo con caracteres minuscula) y un valor */
 
-#include "ula.h"
+#include "value.h"
 
 struct variable_s {
     Value nom, val;
@@ -18,6 +18,9 @@ int varset(char* nom,Value val);
 
 Value varget(char* nom);
 /* se busca una variable con el nom concreto */
+
+size_t varsiz();
+/* da el numero de variables actuales guardadas */
 
 void vardel();
 /* se liberan todas la variables */
