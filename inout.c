@@ -28,26 +28,4 @@ void nln() {
     printf("\n");
 }
 
-/* prueba */
-
-static int end() {
-    vsdel();
-    isdel();
-    vardel();
-    return valerr()+varerr()+stkerr();
-}
-
-int main() {
-    vspush(valnew(0,"Introduce dos numeros: "));
-    out();
-    in();
-    in();
-    vspush(valnew(0,"La suma de los dos es: "));
-    out();
-    if(!ulaadd()) puts("ERROR EN SUMA");//dbg
-    out();
-    nln();
-    return end();
-}
-
 

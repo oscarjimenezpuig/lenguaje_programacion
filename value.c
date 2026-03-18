@@ -57,10 +57,7 @@ Value valnew(char in,...) {
     }
     va_end(list);
     return valfromstrnew(str);
-;
 }
-
-
 
 Value valcpy(Value a) {
     size_t alen=len(a);
@@ -94,6 +91,10 @@ double valtonum(Value v) {
 int valisfalse(Value v) {
     if(v && *v=='0' && *(v+1)==EOS) return 1;
     return 0;
+}
+
+void valprt(Value v) {
+    printf(v);
 }
 
 int valerr() {

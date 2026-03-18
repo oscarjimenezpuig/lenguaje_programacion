@@ -27,5 +27,8 @@ double valtonum(Value val);
 int valisfalse(Value val);
 /* devuelve 1 si el valor es falso (un solo caracter que es el 0) */
 
+void valprt(Value val);
+/* impresion del valor */
+
 int valerr();
 /* control del error de valores para ver si estan destruidos (devuelve 0 si todo correcto) */
