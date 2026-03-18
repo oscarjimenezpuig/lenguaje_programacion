@@ -13,16 +13,19 @@ typedef struct variable_s* Variable;
 
 extern Variable variable;
 
-int varset(char* nom,Value val);
+Variable varnew();
+/* creacion de un nuevo sistema de variables */
+
+int varset(Variable* variable,char* nom,Value val);
 /* se establece un valor a una variable (si no existe, se crea) */
 
-Value varget(char* nom);
+Value varget(Variable* variable,char* nom);
 /* se busca una variable con el nom concreto */
 
-size_t varsiz();
+size_t varsiz(Variable variable);
 /* da el numero de variables actuales guardadas */
 
-void vardel();
+void vardel(Variable* variable);
 /* se liberan todas la variables */
 
 int varerr();
