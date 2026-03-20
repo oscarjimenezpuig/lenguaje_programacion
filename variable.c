@@ -51,6 +51,17 @@ size_t varssiz(Variable var) {
     return counter;
 }
 
+void varsprt(Variable var) {
+    struct variable_s* pv=var;
+    while(pv) {
+        if(pv->nom) printf(pv->nom);
+        else printf("<-");
+        if(pv->val) printf("=%s\n",pv->val);
+        else printf("=NULLVAL\n");
+        pv=pv->nxt;
+    }
+}
+
 void varsdel(Variable* var) {
     struct variable_s* ps=*var;
     while(ps!=NULL) {
@@ -72,6 +83,7 @@ static int varnewone(Variable* var,Value nom) {
         nsv->val=NULL;
         nsv->nxt=*var;
         *var=nsv;
+        ++variables;
         return 1;
     }
     return 0;
@@ -84,7 +96,7 @@ int varnew(Variable* var,char* nom,unsigned int dim) {
             Value vnom=varnom(nom);
             if(vnom) {
                 int nerr=1;
-                for(int k=dim;k>2 && nerr;k--) nerr=varnewone(var,NULL);
+                for(int k=dim;k>1 && nerr;k--) nerr=varnewone(var,NULL);
                 if(nerr) return varnewone(var,vnom);
             }
         }
@@ -92,60 +104,28 @@ int varnew(Variable* var,char* nom,unsigned int dim) {
     return 0;
 }
 
-//TODO Programar varset como vector y varget como vector
-
 int varset(Variable* var,char* nom,unsigned int pos,Value val) {
-    if(var && nom && val) {
-        struct variable_s* pv=varfnd(var,nom);
+    struct variable_s* pv=NULL;
+    if(var && nom && val && (pv=varfnd(var,nom))) {
+        int counter=0;
+        while(counter++!=pos && pv) pv=pv->nxt;
         if(pv) {
-            int counter=0;
-            while(counter++!=pos && pv) {
-                pv=pv->nxt;
-            }
-            if(pv) {
-                valdel(&pv->val);
-                pv->val=val;
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-
-
-int varset(Variable* var,char* nom,Value val) {
-    if(val) {
-        struct variable_s* pv=varfnd(var,nom);
-        if(pv) {
-            if(comnom(val,pv->val)) {
-                valdel(&pv->val);
-                pv->val=val;
-            }
+            valdel(&pv->val);
+            pv->val=val;
             return 1;
-        } else {
-            Value vnom=varnom(nom);
-            if(vnom) {
-                struct variable_s* nsv=malloc(sizeof(struct variable_s));
-                if(nsv) {
-                    ++variables;
-                    nsv->nom=vnom;
-                    nsv->val=val;
-                    nsv->nxt=*var;
-                    *var=nsv;
-                    return 1;
-                } else {
-                    valdel(&vnom);
-                }
-            }
         }
     }
     return 0;
 }
 
-Value varget(Variable* var,char* nom) {
+Value varget(Variable* var,char* nom,unsigned int pos) {
     Value ret=NULL;
-    struct variable_s* ps=varfnd(var,nom);
-    if(ps) ret=valcpy(ps->val);
+    struct variable_s* pv=NULL;
+    if(var && nom && pv) {
+        int counter=0;
+        while(counter++!=pos && pv) pv=pv->nxt;
+        if(pv) ret=pv->val;
+    }
     return ret;
 }
 

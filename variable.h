@@ -19,6 +19,9 @@ Variable varsnew();
 size_t varssiz(Variable variable);
 /* da la dimension del varsis */
 
+void varsprt(Variable variable);
+/* impresion de todo el sistema de variables */
+
 void varsdel(Variable* variable);
 /* se liberan todas la variables */
 

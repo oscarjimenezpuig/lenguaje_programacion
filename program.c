@@ -60,6 +60,40 @@ static void linprt(struct line_s* l) {
     printf("\n");
 }
 
+static struct line_s* findmain() {
+    /* buscamos la instruccion main */
+    struct line_s* pl=program;
+    while(pl) {
+        struct token_s* pt=pl->tok;
+        while(pt) {
+            if(pt->typ==TINS && pt->ins==MAIN) return pl;
+            pt=pt->nxt;
+        }
+        pl=pl->nxt;
+    }
+}
+
+static void linestart(struct line_s* line) {
+    /* inserta una linea en los stacks para ejecutarse */
+    struct token_s* ps=pl->tok;
+    while(ps) {
+        if(ps->typ==TINS) ispush(ps->ins);
+        else if(ps->typ==TVAL) vspush(valcpy(ps->val));
+        ps=ps->nxt;
+    }
+}
+
+int prgexe() {
+    static struct line_s* actual=NULL;
+    /* si no hay linea actual buscamos main */
+    if(!actual) actual=findmain();
+    while(actual) {
+        linestart(actual);
+        //TODO Continuar
+
+        
+    
+
 void prgprt() {
     struct line_s* pl=program;
     while(pl) {
@@ -100,16 +134,13 @@ static int end() {
 }
 
 int main() {
-    prginslin();
-    prginstok(TINS,1);
-    Value a=valnew(1,23.4);
-    prginstok(TVAL,a);
-    prginslin();
-    prginstok(TINS,2);
-    Value b=valnew(0,"Hola");
-    prginstok(TVAL,b);
-    prgprt();
-    prgdel();
+    Value a=valnew(1,22.34);
+    Variable v=varsnew();
+    varnew(&v,"radio",1);
+    varnew(&v,"potencia",3);
+    varset(&v,"potencia",2,a);
+    varsprt(v);
+    varsdel(&v);
     return end();
 }
 
