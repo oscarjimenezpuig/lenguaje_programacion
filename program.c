@@ -2,31 +2,78 @@
 
 #include "program.h"
 
-Program program=NULL;
+Program program={NULL,NULL};
 
-int prginslin() {
-    struct line_s* nl=malloc(sizeof(struct line_s));
-    if(nl) {
-        nl->tok=NULL;
-        nl->nxt=NULL;
-        if(!program) program=nl;
-        else {
-            struct line_s* pl=program;
-            while(pl->nxt) {
-                pl=pl->nxt;
-            }
-            pl->nxt=nl;
+static struct procedure_s* pactual=NULL;
+static struct line_s* lactual=NULL;
+
+int prgprcmain(Value nom) {
+    struct procedure_s* pp=program.prc;
+    while(pp) {
+        if(valequ(nom,pp->nom)) {
+            program.frs=pp;
+            return 1;
         }
+        pp=pp->nxt;
+    }
+    return 0;
+}
+
+#define ALOC(A) malloc(sizeof(A))
+
+int prgprcnew(Value nom) {
+    if(pactual==NULL) {
+        struct procedure_s* np=ALOC(struct procedure_s);
+        if(np) {
+            np->nom=nom;
+            np->lin=NULL;
+            np->nxt=program.prc;
+            program.prc=np;
+            pactual=np;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int prgprcend() {
+    if(pactual) {
+        pactual=NULL;
         return 1;
     }
     return 0;
 }
 
-int prginstok(type_e t,...) {
-    if(program) {
-        struct line_s* pl=program;
-        while(pl->nxt) pl=pl->nxt;
-        struct token_s* tn=malloc(sizeof(struct token_s));
+int prglinnew() {
+    if(lactual==NULL && pactual) {
+        struct line_s* ln=ALOC(struct line_s);
+        if(ln) {
+            ln->tok=NULL;
+            ln->nxt=NULL;
+            if(pactual->lin) {
+                struct line_s* pl=pactual->lin;
+                while(pl->nxt) pl=pl->nxt;
+                pl->nxt=ln;
+            } else {
+                pactual->lin=ln;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int prglinend() {
+    if(lactual) {
+        lactual=NULL;
+        return 1;
+    }
+    return 0;
+}
+
+int prgtoknew(type_e t,...) {
+    if(lactual) {
+        struct token_s* tn=ALOC(struct token_s);
         if(tn) {
             tn->typ=t;
             tn->nxt=NULL;
@@ -35,94 +82,85 @@ int prginstok(type_e t,...) {
             if(t==TINS) tn->ins=va_arg(list,int);
             else tn->val=va_arg(list,Value);
             va_end(list);
-            if(pl->tok) {
-                struct token_s* pt=pl->tok;
+            if(lactual->tok) {
+                struct token_s* pt=lactual->tok;
                 while(pt->nxt) pt=pt->nxt;
                 pt->nxt=tn;
-            } else pl->tok=tn;
+            } else lactual->tok=tn;
             return 1;
         }
     }
     return 0;
 }
 
-static void linprt(struct line_s* l) {
-    struct token_s* pt=l->tok;
-    while(pt) {
-        if(pt->typ==TINS) printf("I:(%i) ",pt->ins);
-        else {
-            printf("V:(");
-            valprt(pt->val);
-            printf(") ");
-        }
-        pt=pt->nxt;
+static void tokprt(struct token_s t) {
+    if(t.typ==TINS) {
+        printf("I(%i) ",t.ins);
+    } else {
+        printf("V(");
+        valprt(t.val);
+        printf(") ");
+    }
+}
+
+static void linprt(struct line_s l) {
+    struct token_s* t=l.tok;
+    while(t) {
+        tokprt(*t);
+        t=t->nxt;    
     }
     printf("\n");
 }
 
-static struct line_s* findmain() {
-    /* buscamos la instruccion main */
-    struct line_s* pl=program;
-    while(pl) {
-        struct token_s* pt=pl->tok;
-        while(pt) {
-            if(pt->typ==TINS && pt->ins==MAIN) return pl;
-            pt=pt->nxt;
-        }
-        pl=pl->nxt;
+static void prcprt(struct procedure_s p) {
+    printf("Procedure: %s\n",p.nom);
+    struct line_s* l=p.lin;
+    while(l) {
+        linprt(*l);
+        l=l->nxt;
     }
+    printf("End: %s\n",p.nom);
 }
-
-static void linestart(struct line_s* line) {
-    /* inserta una linea en los stacks para ejecutarse */
-    struct token_s* ps=pl->tok;
-    while(ps) {
-        if(ps->typ==TINS) ispush(ps->ins);
-        else if(ps->typ==TVAL) vspush(valcpy(ps->val));
-        ps=ps->nxt;
-    }
-}
-
-int prgexe() {
-    static struct line_s* actual=NULL;
-    /* si no hay linea actual buscamos main */
-    if(!actual) actual=findmain();
-    while(actual) {
-        linestart(actual);
-        //TODO Continuar
-
-        
-    
 
 void prgprt() {
-    struct line_s* pl=program;
-    while(pl) {
-        linprt(pl);
-        pl=pl->nxt;
+    struct procedure_s* p=program.prc;
+    while(p) {
+        prcprt(*p);
+        p=p->nxt;
+    }
+} 
+
+static void tokdel(struct token_s* tok) {
+    if(tok) {
+        tokdel(tok->nxt);
+        if(tok->typ==TVAL) {
+            valdel(&(tok->val));
+        }
+        free(tok);
     }
 }
 
-static void lindel(struct line_s* l) {
-    struct token_s* pt=l->tok;
-    while(pt) {
-        struct token_s* tdel=pt;
-        pt=pt->nxt;
-        if(tdel->typ==TVAL) valdel(&tdel->val);
-        free(tdel);
+static void lindel(struct line_s* lin) {
+    if(lin) {
+        lindel(lin->nxt);
+        tokdel(lin->tok);
+        free(lin);
+    }
+}
+
+static void prcdel(struct procedure_s* prc) {
+    if(prc) {
+        prcdel(prc->nxt);
+        lindel(prc->lin);
+        valdel(&(prc->nom));
+        free(prc);
     }
 }
 
 void prgdel() {
-    struct line_s* pl=program;
-    while(pl) {
-        struct line_s* tdel=pl;
-        pl=pl->nxt;
-        lindel(tdel);
-        free(tdel);
-    }
+    prcdel(program.prc);
+    program=(Program){NULL,NULL};
 }
-
-
 
 
 /* prueba */

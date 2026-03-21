@@ -27,6 +27,9 @@ double valtonum(Value val);
 int valisfalse(Value val);
 /* devuelve 1 si el valor es falso (un solo caracter que es el 0) */
 
+int valequ(Value v,Value w);
+/* dice si dos valores son iguales */
+
 void valprt(Value val);
 /* impresion del valor */
 

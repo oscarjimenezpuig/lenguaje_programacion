@@ -75,19 +75,7 @@ int ulainv() {
 int ulaequ() {
     int ret=0;
     Value a,b;
-    if(valget(&a,&b)) {
-        char* pa=a;
-        char* pb=b;
-        char r=1;
-        while(r && *pa!=EOS) {
-            if(*pa!=*pb) r=0;
-            pa++;
-            pb++;
-        }
-        if(r && *pb!=EOS) r=0;
-        valfree(&a,&b);
-        ret=valbool(r);
-    }
+    if(valget(&a,&b)) ret=valbool(valequ(a,b));
     return ret;
 }
 

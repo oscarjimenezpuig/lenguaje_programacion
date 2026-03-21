@@ -93,6 +93,17 @@ int valisfalse(Value v) {
     return 0;
 }
 
+int valequ(Value v,Value w) {
+    char* pv=v;
+    char* pw=w;
+    while(*pv!=EOS) {
+        if(*pv!=*pw) return 0;
+        pv++;
+        pw++;
+    }
+    return (*pw==EOS);
+}   
+
 void valprt(Value v) {
     printf(v);
 }

@@ -26,23 +26,44 @@ struct line_s {
     struct line_s* nxt;
 };
 
-typedef struct line_s* Program;
+struct procedure_s {
+    Value nom;
+    struct line_s* lin;
+    struct procedure_s* nxt;
+};
+
+typedef struct {
+    struct procedure_s* prc;
+    struct procedure_s* frs;
+} Program;
 
 extern Program program;
 
-int prginslin();
-/* crea una nueva linea en el programa */
+int prgprcmain(Value nom);
+/* establece, de todos los procedimientos quien es el main */
 
-int prginstok(type_e typ,...);
-/* crea un nuevo token en la ultima linea definida */
+int prgprcnew(Value nom);
+/* se crea un nuevo procedimiento con el nombre concreto */
+
+int prgprcend();
+/* finaliza el procedimiento actual, necesario para establecer uno nuevo */
+
+int prglinnew();
+/* se crea una nueva linea en el procedimiento */
+
+int prglinend();
+/* cierra una linea, necesario para abrir otra */
+
+int prgtoknew(type_e typ,...);
+/* se crea un nuevo token, del tipo valor o instruccion */
+
+void prgprt();
+/* impresion del programa */
 
 int prgexe();
 /* ejecucion del programa */
 /* un programa se ejecuta leyendo toda la linea y poniendo los valores en el 
  * stack de valores y las instrucciones en el stack de instrucciones */ 
-
-void prgprt();
-/* impresion del programa */
 
 void prgdel();
 /* libera el espacio del programa */
