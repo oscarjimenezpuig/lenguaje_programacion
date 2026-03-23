@@ -64,6 +64,23 @@ void prgdel();
 
 /* EJECUCION */
 
+struct prcexe_s {
+    struct procedure_s* prc; /* procedimiento que se ejecuta */
+    struct line_s* lin; /* linea que se ejecuta del procedimiento */
+    Variable var;
+    Stack sval;
+    Stack sins;
+    struct prcexe_s* prv;
+};
+
+struct prgexe_s {
+    Variable var;
+    struct prcexe_s* zex;
+    struct prcexe_s* pex;
+};
+
+extern struct prgexe_s prgexe;
+
 int prgexe();
 /* ejecucion del programa */
 /* un programa se ejecuta leyendo toda la linea y poniendo los valores en el 

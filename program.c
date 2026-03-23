@@ -175,22 +175,7 @@ void prgdel() {
 
 /* EJECUCION DEL PROGRAMA */
 
-struct prcexe_s {
-    struct procedure_s* prc; /* procedimiento que se ejecuta */
-    struct line_s* lin; /* linea que se ejecuta del procedimiento */
-    Variable var;
-    Stack sval;
-    Stack sins;
-    struct prcexe_s* prv;
-};
-
-struct prgexe_s {
-    Variable var;
-    struct prcexe_s* zex;
-    struct prcexe_s* pex;
-};
-
-static struct pgrgexe_s prgexe={NULL,NULL};
+struct pgrgexe_s prgexe={NULL,NULL};
 
 static int prcexenew(struct procedure_s* prc) {
     if(prc) {
@@ -259,6 +244,7 @@ static int linexe(struct prcexe_s* pex) {
                 break;
             case LET:
                 nerr=
+
                 
         
        
