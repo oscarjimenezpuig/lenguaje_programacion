@@ -162,6 +162,70 @@ void prgdel() {
     program=(Program){NULL,NULL};
 }
 
+/* EJECUCION DEL PROGRAMA */
+
+struct prcexe_s {
+    struct procedure_s* prc; /* procedimiento que se ejecuta */
+    struct line_s* lin; /* linea que se ejecuta del procedimiento */
+    Variable var;
+    Stack sval;
+    Stack sins;
+    struct prcexe_s* prv;
+};
+
+struct prgexe_s {
+    Variable var;
+    struct prcexe_s* pex;
+};
+
+static struct pgrgexe_s prgexe={NULL,NULL};
+
+static int prcexenew(struct procedure_s* prc) {
+    if(prc) {
+        struct prcexe_s* pen=ALOC(struct prcexe_s);
+        if(pen) {
+            pen->prc=prc;
+            pen->lin=prc->lin;
+            pen->var=NULL;
+            pen->sval=pen->sins=NULL;
+            pen->prv=prgexe->pex;
+            prgexe->pex=pen;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void prcexedel(struct prcexe_s* pex) {
+    /* se libera un procedimiento, el ultimo de la cola y el penultimo es el que se ejecuta */
+    if(pex) {
+        varsdel(&pex->var);
+        stkdel(&pex->sval);
+        stkdel(&pex->sins);
+        prgexe->pex=pex->prv;
+        free(pex);
+    }
+}
+
+static void linexe(struct prcexe_s* pex) {
+    /* ejecucion de una linea, introduciendo todos los valores que encontramos en las pilas */
+    /* introduccion de valores e instrucciones en los Stack */
+    struct token_s* tok=lin->tok;
+    while(tok) {
+        if(tok->typ==TINS) ispush(&pex->sins,tok->ins);
+        else vspush(&pex->sval,tok->val);
+        tok=tok->nxt;
+    }
+    /* lectura de las instrucciones almacenadas en el stack */
+        
+       
+            
+
+
+
+int prgexe() {
+}
+
 
 /* prueba */
 

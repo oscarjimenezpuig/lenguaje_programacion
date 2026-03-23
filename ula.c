@@ -2,7 +2,7 @@
 
 #include "ula.h"
 
-static int valget(Value* a,Value* b) {
+static int valget(Stack* stk,Value* a,Value* b) {
     int err=0;
     if(a) {
         *a=vspop();
@@ -20,72 +20,72 @@ static void valfree(Value* a,Value* b) {
     if(*b) valdel(b);
 }
 
-static int valins(double a) {
-    return vspush(valnew(1,a));
+static int valins(Stack* stk,double a) {
+    return vspush(stk,valnew(1,a));
 }
 
-static int valbool(int res) {
+static int valbool(Stack* stk,int res) {
     Value nv=(res)?valnew(0,"1"):valnew(0,"0");
-    return vspush(nv);
+    return vspush(stk,nv);
 }
 
 #define gva valtonum(a)
 #define gvb valtonum(b)
 
-int ulaadd() {
+int ulaadd(Stack* stk) {
     int r=0;
     Value a,b;
-    if(valget(&a,&b)) {
-        r=valins(gva+gvb);
+    if(valget(stk,&a,&b)) {
+        r=valins(stk,gva+gvb);
         valfree(&a,&b);
     }
     return r;
 }
 
-int ulaop() {
+int ulaop(Stack* stk) {
     int r=0;
     Value a;
-    if(valget(&a,NULL)) {
-        r=valins(1*gva);
+    if(valget(stk,&a,NULL)) {
+        r=valins(stk,1*gva);
         valfree(&a,NULL);
     }
     return r;
 }
 
-int ulaprd() {
+int ulaprd(Stack* stk) {
     int r=0;
     Value a,b;
-    if(valget(&a,&b)) {
-        r=valins(gva*gvb);
+    if(valget(stk,&a,&b)) {
+        r=valins(stk,gva*gvb);
         valfree(&a,&b);
     }
     return r;
 }
 
-int ulainv() {
+int ulainv(Stack* stk) {
     int r=0;
     Value a;
-    if(valget(&a,NULL)) {
-        r=valins(1/gva);
+    if(valget(stk,&a,NULL)) {
+        r=valins(stk,1/gva);
         valfree(&a,NULL);
     }
     return r;
 }
 
-int ulaequ() {
+int ulaequ(Stack* stk) {
     int ret=0;
     Value a,b;
-    if(valget(&a,&b)) ret=valbool(valequ(a,b));
+    if(valget(stk,&a,&b)) ret=valbool(stk,valequ(a,b));
     return ret;
 }
 
-int ulagrt() {
+int ulagrt(Stack* stk) {
     int ret=0;
     Value a,b;
-    if(valget(&a,&b)) {
+    if(valget(stk,&a,&b)) {
         int r=gva>gvb;
         valfree(&a,NULL);
-        ret=valbool(r);
+        ret=valbool(stk,r);
     }
     return ret;
 }
@@ -93,5 +93,39 @@ int ulagrt() {
 #undef gva
 #undef gvb
 
+int out(Stack* stk) {
+    Value val=vspop(stk);
+    if(val) {
+        printf(val);
+        valdel(&val);
+        return 1;
+    }
+    return 0;
+}
+
+int in(Stack* stk) {
+    char entrada[INSTLEN];
+    char* pe=entrada;
+    char c=0;
+    while(((c=getchar())!='\n' && pe-entrada<INSTLEN-1)) {
+        *pe++=c;
+    }
+    *pe=EOS;
+    Value nv=valnew(0,entrada);
+    return vspush(stk,nv);
+}
+
+void nln() {
+    printf("\n");
+}
+
+void tab() {
+    for(int k=0;k<TABSPC;k++) printf(" ");
+}
+
+//TODO Como decir si una variable es publica o privada???
+
+int let(Variable* var,Stack* stk) {
+}
 
 

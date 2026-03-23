@@ -6,22 +6,32 @@
 
 typedef unsigned char Instruction;
 
-int vspush(Value val);
+struct stack_s {
+    union {
+        Value val;
+        Instruction ins;
+    };
+    struct stack_s* prv;
+};
+
+typedef struct stack_s* Stack;
+
+int vspush(Stack* sval,Value val);
 /* insercion de un valor en el stack de valores */
 
-Value vspop();
+Value vspop(Stack* sval;);
 /* extraccion de valores en stack de valores */
 
-void vsdel();
+void vsdel(Stack* sval);
 /* se libera espacio total del stack de valores */
 
-int ispush(Instruction ins);
+int ispush(Stack* sins,Instruction ins);
 /* insercion de una instruccion */
 
-Instruction ispop();
+Instruction ispop(Stack* sins);
 /* extraccion de una instruccion */
 
-void isdel();
+void isdel(Stack* sins);
 /* se libera el espacio total del stack de instrucciones */
 
 int stkerr();

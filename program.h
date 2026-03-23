@@ -1,14 +1,8 @@
 /* LP 18-3-26 */
 
-#include "inout.h"
+#include "instructions.h"
 
-/* codigos de instrucciones */
-
-/* main= instruccion donde marca el primer procedimiento a ejecutarse */
-#define MAIN 1 /* instruccion que dirige al primer procedimiento que se evaluara (valor)*/
-/* procedimiento: Todo procedimiento se abre y se cierra */
-#define PRST 2 /* inicio de procedimiento(valor) */
-#define PREN 3 /* fin de procedimiento */
+/* INSERCION */
 
 typedef enum {TINS,TVAL} type_e;
 
@@ -40,7 +34,7 @@ typedef struct {
 extern Program program;
 
 int prgprcmain(Value nom);
-/* establece, de todos los procedimientos quien es el main */
+/* establece, de todos los procedimientos quien es el main (lectura directa desde el parser)  */
 
 int prgprcnew(Value nom);
 /* se crea un nuevo procedimiento con el nombre concreto */
@@ -60,13 +54,16 @@ int prgtoknew(type_e typ,...);
 void prgprt();
 /* impresion del programa */
 
+void prgdel();
+/* libera el espacio del programa */
+
+/* EJECUCION */
+
 int prgexe();
 /* ejecucion del programa */
 /* un programa se ejecuta leyendo toda la linea y poniendo los valores en el 
  * stack de valores y las instrucciones en el stack de instrucciones */ 
 
-void prgdel();
-/* libera el espacio del programa */
 
 
 

@@ -11,11 +11,6 @@ struct variable_s {
 
 typedef struct variable_s* Variable;
 
-extern Variable variable;
-
-Variable varsnew();
-/* creacion de un nuevo sistema de variables */
-
 size_t varssiz(Variable variable);
 /* da la dimension del varsis */
 

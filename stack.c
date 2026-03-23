@@ -2,95 +2,92 @@
 
 #include "stack.h"
 
-struct stack_s {
-    union {
-        Value val;
-        Instruction ins;
-    };
-    struct stack_s* prv;
-};
-
-typedef struct stack_s* Stack;
-
-static Stack valstk=NULL;
-
-static Stack insstk=NULL;
+static int stacks=0;
 
 static struct stack_s* stknew() {
-    return malloc(sizeof(struct stack_s));
+    struct stack_s* ns=malloc(sizeof(struct stack_s));
+    return ns;
 }
 
-int vspush(Value val) {
-    if(val) {
+int vspush(Stack* sval,Value val) {
+    if(val &&  sval) {
         struct stack_s* n=stknew();
         if(n) {
+            ++stacks;
             n->val=val;
-            n->prv=valstk;
-            valstk=n;
+            n->prv=*sval;
+            *sval=n;
             return 1;
         }
     }
     return 0;
 }
 
-Value vspop() {
+Value vspop(Stack* sval) {
     Value v=NULL;
-    if(valstk) {
-        v=valstk->val;
-        struct stack_s* tdel=valstk;
-        valstk=valstk->prv;
+    if(sval && *sval) {
+        v=(*sval)->val;
+        struct stack_s* tdel=*sval;
+        *sval=(*sval)->prv;
         free(tdel);
     }
     return v;
 }
 
-void vsdel() {
-    struct stack_s* ps=valstk;
-    while(ps) {
-        valdel(&ps->val);
-        struct stack_s* tdel=ps;
-        ps=ps->prv;
-        free(tdel);
+void vsdel(Stack* sval) {
+    if(sval) {
+        struct stack_s* ps=*sval;
+        while(ps) {
+            valdel(&ps->val);
+            struct stack_s* tdel=ps;
+            ps=ps->prv;
+            free(tdel);
+            --stacks;
+        }
+        *sval=NULL;
     }
-    valstk=NULL;
 }
 
-int ispush(Instruction ins) {
-    if(ins!=INSNUL) {
+int ispush(Stack* sins,Instruction ins) {
+    if(ins!=INSNUL && sins) {
         struct stack_s* n=stknew();
         if(n) {
+            ++stacks;
             n->ins=ins;
-            n->prv=insstk;
-            insstk=n;
+            n->prv=*sins;
+            *sins=n;
             return 1;
         }
     }
     return 0;
 }
 
-Instruction ispop() {
+Instruction ispop(Stack* sins) {
     Instruction i=INSNUL;
-    if(insstk) {
-        i=insstk->ins;
-        struct stack_s* tdel=insstk;
-        insstk=insstk->prv;
+    if(sins && *sins) {
+        i=(*sins)->ins;
+        struct stack_s* tdel=*sins;
+        *sins=(*sins)->prv;
         free(tdel);
     }
     return i;
 }
 
-void isdel() {
-    struct stack_s* ps=insstk;
-    while(ps) {
-        struct stack_s* tdel=ps;
-        ps=ps->prv;
-        free(tdel);
+void isdel(Stack* sins) {
+    if(sins) {
+        struct stack_s* ps=*sins;
+        while(ps) {
+            struct stack_s* tdel=ps;
+            ps=ps->prv;
+            free(tdel);
+            --stacks;
+        }
+        *sins=NULL;
     }
-    insstk=NULL;
 }
 
 int stkerr() {
-    return (insstk || valstk);
+    return stacks;
 }
 
 

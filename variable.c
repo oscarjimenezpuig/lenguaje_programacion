@@ -37,10 +37,6 @@ static Value varnom(char* nom) {
     return valnew(0,nom);
 }
 
-Variable varsnew() {
-    return NULL;
-}
-
 size_t varssiz(Variable var) {
     struct variable_s* pv=var;
     size_t counter=0;
