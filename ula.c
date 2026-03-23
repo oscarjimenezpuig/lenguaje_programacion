@@ -32,7 +32,7 @@ static int valbool(Stack* stk,int res) {
 #define gva valtonum(a)
 #define gvb valtonum(b)
 
-int ulaadd(Stack* stk) {
+int add(Stack* stk) {
     int r=0;
     Value a,b;
     if(valget(stk,&a,&b)) {
@@ -42,7 +42,7 @@ int ulaadd(Stack* stk) {
     return r;
 }
 
-int ulaop(Stack* stk) {
+int op(Stack* stk) {
     int r=0;
     Value a;
     if(valget(stk,&a,NULL)) {
@@ -52,7 +52,7 @@ int ulaop(Stack* stk) {
     return r;
 }
 
-int ulaprd(Stack* stk) {
+int prd(Stack* stk) {
     int r=0;
     Value a,b;
     if(valget(stk,&a,&b)) {
@@ -62,7 +62,7 @@ int ulaprd(Stack* stk) {
     return r;
 }
 
-int ulainv(Stack* stk) {
+int inv(Stack* stk) {
     int r=0;
     Value a;
     if(valget(stk,&a,NULL)) {
@@ -72,14 +72,14 @@ int ulainv(Stack* stk) {
     return r;
 }
 
-int ulaequ(Stack* stk) {
+int equ(Stack* stk) {
     int ret=0;
     Value a,b;
     if(valget(stk,&a,&b)) ret=valbool(stk,valequ(a,b));
     return ret;
 }
 
-int ulagrt(Stack* stk) {
+int grt(Stack* stk) {
     int ret=0;
     Value a,b;
     if(valget(stk,&a,&b)) {
@@ -123,9 +123,10 @@ void tab() {
     for(int k=0;k<TABSPC;k++) printf(" ");
 }
 
-//TODO Como decir si una variable es publica o privada???
-
 int let(Variable* var,Stack* stk) {
+    
 }
+
+int set(Variable* var,Stack
 
 

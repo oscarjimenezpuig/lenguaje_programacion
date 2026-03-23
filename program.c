@@ -7,22 +7,33 @@ Program program={NULL,NULL};
 static struct procedure_s* pactual=NULL;
 static struct line_s* lactual=NULL;
 
-int prgprcmain(Value nom) {
-    struct procedure_s* pp=program.prc;
-    while(pp) {
-        if(valequ(nom,pp->nom)) {
-            program.frs=pp;
+
+#define ALOC(A) malloc(sizeof(A))
+
+int prgprczernew() {
+    if(pactual==NULL) {
+        struct procedure_s* np=ALOC(struct procedure_s);
+        if(np) {
+            np->lin=NULL;
+            np->nxt=NULL;
+            program.zer=np;
+            pactual=np;
             return 1;
         }
-        pp=pp->nxt;
     }
     return 0;
 }
 
-#define ALOC(A) malloc(sizeof(A))
+int prgprczerend() {
+    if(pactual!=NULL && pactual==program.zer) {
+        pactual=NULL;
+        return 1;
+    }
+    return 0;
+}
 
 int prgprcnew(Value nom) {
-    if(pactual==NULL) {
+    if(pactual!=NULL && pactual==program.zer) {
         struct procedure_s* np=ALOC(struct procedure_s);
         if(np) {
             np->nom=nom;
@@ -37,8 +48,8 @@ int prgprcnew(Value nom) {
 }
 
 int prgprcend() {
-    if(pactual) {
-        pactual=NULL;
+    if(pactual!=program.zer) {
+        pactual=program.zer;
         return 1;
     }
     return 0;
@@ -175,6 +186,7 @@ struct prcexe_s {
 
 struct prgexe_s {
     Variable var;
+    struct prcexe_s* zex;
     struct prcexe_s* pex;
 };
 
@@ -188,8 +200,12 @@ static int prcexenew(struct procedure_s* prc) {
             pen->lin=prc->lin;
             pen->var=NULL;
             pen->sval=pen->sins=NULL;
-            pen->prv=prgexe->pex;
-            prgexe->pex=pen;
+            if(program->zer==prc) {
+                zer=pen;
+            } else {
+                pen->prv=prgexe->pex;
+                prgexe->pex=pen;
+            }
             return 1;
         }
     }
@@ -207,7 +223,9 @@ static void prcexedel(struct prcexe_s* pex) {
     }
 }
 
-static void linexe(struct prcexe_s* pex) {
+#define SVAL (&(pex->sval))
+
+static int linexe(struct prcexe_s* pex) {
     /* ejecucion de una linea, introduciendo todos los valores que encontramos en las pilas */
     /* introduccion de valores e instrucciones en los Stack */
     struct token_s* tok=lin->tok;
@@ -217,6 +235,31 @@ static void linexe(struct prcexe_s* pex) {
         tok=tok->nxt;
     }
     /* lectura de las instrucciones almacenadas en el stack */
+    Instruction ins=NUI;
+    int nerr=1;
+    while(nerr && (ins=ispop(&(pex->sins)))) {
+        switch(ins) {
+            case ADD:
+                nerr=add(SVAL);
+                break;
+            case OP:
+                nerr=op(SVAL);
+                break;
+            case PRD:
+                nerr=prd(SVAL);
+                break;
+            case INV:
+                nerr=inv(SVAL);
+                break;
+            case EQU:
+                nerr=equ(SVAL);
+                break;
+            case GRT:
+                nerr=equ(SVAL);
+                break;
+            case LET:
+                nerr=
+                
         
        
             

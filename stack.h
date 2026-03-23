@@ -2,8 +2,6 @@
 
 #include "variable.h"
 
-#define INSNUL 0 /* instruccion nula */
-
 typedef unsigned char Instruction;
 
 struct stack_s {

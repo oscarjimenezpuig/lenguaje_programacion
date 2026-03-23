@@ -4,24 +4,24 @@
 
 /* OPERADORES */
 
-int ulaadd(Stack* stk);
+int add(Stack* stk);
 /* suma */
 
-int ulaop(Stack* stk);
+int op(Stack* stk);
 /* opuesto */
 
-int ulaprd(Stack* stk);
+int prd(Stack* stk);
 /* producto */
 
-int ulainv(Stack* stk); 
+int inv(Stack* stk); 
 /* inverso */
 
 /* devolucion de valores booleanos */
 
-int ulaequ(Stack* stk);
+int equ(Stack* stk);
 /* igualdad entre dos valores, devuelve valor booleano */
 
-int ulagrt(Stack* stk);
+int grt(Stack* stk);
 /* dice si a mayor que b (punto de vista numerico) */
 
 /* INOUT */

@@ -1,6 +1,6 @@
 /* LP 18-3-26 */
 
-#include "instructions.h"
+#include "ula.h"
 
 /* INSERCION */
 
@@ -28,13 +28,18 @@ struct procedure_s {
 
 typedef struct {
     struct procedure_s* prc;
-    struct procedure_s* frs;
+    struct procedure_s* zer;
 } Program;
 
 extern Program program;
 
-int prgprcmain(Value nom);
-/* establece, de todos los procedimientos quien es el main (lectura directa desde el parser)  */
+/* el procedimiento zero es el procedimiento publico */
+
+int prgprczernew();
+/* establece el procedimiento zero y lo pone como actual*/
+
+int prgprczerend();
+/* finalizacion del procedimiento zero y final de programa */
 
 int prgprcnew(Value nom);
 /* se crea un nuevo procedimiento con el nombre concreto */

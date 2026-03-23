@@ -2,9 +2,7 @@
 
 /* Un valor es una cadena de caracteres donde se guardan dos caracters por byte */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
+#include "instructions.h"
 
 #define EOS '\0' /* indicativo del final de string */
 
