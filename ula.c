@@ -5,11 +5,11 @@
 static int valget(Stack* stk,Value* a,Value* b) {
     int err=0;
     if(a) {
-        *a=vspop();
+        *a=vspop(stk);
         err=(*a==NULL);
     }
     if(!err && b) {
-        *b=vspop();
+        *b=vspop(stk);
         err=(*b==NULL);
     }
     return (err==0);
@@ -124,9 +124,68 @@ void tab() {
 }
 
 int let(Variable* var,Stack* stk) {
-    
+    Value nom=vspop(stk);
+    if(nom) return varnew(var,nom,1);
+    return 0;
 }
 
-int set(Variable* var,Stack
+int set(Variable* var,Stack*stk) {
+    Value nom=vspop(stk);
+    if(nom) {
+        Value val=vspop(stk);
+        if(val) {
+            return varset(var,nom,0,val);
+        }
+    }
+    return 0;
+}
+
+int get(Variable* var,Stack* stk) {
+    Value nom=vspop(stk);
+    if(nom) {
+        Value val=varget(var,nom,0);
+        if(val) return vspush(stk,val);
+    }
+    return 0;
+}
+
+int arl(Variable* var,Stack* stk) {
+    Value nom=vspop(stk);
+    if(nom) {
+        Value val=vspop(stk);
+        if(val) {
+            int num=valtonum(val);
+            return varnew(var,nom,num);
+        }
+    }
+    return 0;
+}
+
+int ars(Variable* var,Stack* stk) {
+    Value nom=vspop(stk);
+    if(nom) {
+        Value vnum=vspop(stk);
+        if(vnum) {
+            int num=valtonum(vnum);
+            Value val=vspop(stk);
+            if(val) return varset(var,nom,num,val);
+        }
+    }
+    return 0;
+}
+
+int arg(Variable* var,Stack* stk) {
+    Value nom=vspop(stk);
+    if(nom) {
+        Value vnum=vspop(stk);
+        if(vnum) {
+            int num=valtonum(vnum);
+            Value val=varget(var,nom,num);
+            if(val) return vspush(stk,val);
+        }
+    }
+    return 0;
+}
+
 
 

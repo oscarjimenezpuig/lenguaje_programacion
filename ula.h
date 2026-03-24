@@ -52,13 +52,13 @@ int set(Variable* var,Stack* stk);
 int get(Variable* var,Stack* stk);
 /* conseguimos el valor de una variable */
 
-int dim(Variable* var,Stack* stk);
+int arl(Variable* var,Stack* stk);
 /* creamos una matriz de valores */
 
-int setp(Variable* var,Stack* stk);
+int ars(Variable* var,Stack* stk);
 /* asignamos el valor de una matriz en una determinada posicion */
 
-int getp(Variable* var,Stack* stk);
+int arg(Variable* var,Stack* stk);
 /* conseguimos el valor de una determinada matriz en una posicon */
 
 

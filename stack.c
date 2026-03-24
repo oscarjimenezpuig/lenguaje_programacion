@@ -49,7 +49,7 @@ void vsdel(Stack* sval) {
 }
 
 int ispush(Stack* sins,Instruction ins) {
-    if(ins!=INSNUL && sins) {
+    if(ins!=NOI && sins) {
         struct stack_s* n=stknew();
         if(n) {
             ++stacks;
@@ -63,7 +63,7 @@ int ispush(Stack* sins,Instruction ins) {
 }
 
 Instruction ispop(Stack* sins) {
-    Instruction i=INSNUL;
+    Instruction i=NOI;
     if(sins && *sins) {
         i=(*sins)->ins;
         struct stack_s* tdel=*sins;

@@ -17,7 +17,7 @@ typedef struct stack_s* Stack;
 int vspush(Stack* sval,Value val);
 /* insercion de un valor en el stack de valores */
 
-Value vspop(Stack* sval;);
+Value vspop(Stack* sval);
 /* extraccion de valores en stack de valores */
 
 void vsdel(Stack* sval);
