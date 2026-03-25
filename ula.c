@@ -2,96 +2,75 @@
 
 #include "ula.h"
 
-static int valget(Stack* stk,Value* a,Value* b) {
+static int valget(Stack* stk,Value* f,Value* s) {
     int err=0;
-    if(a) {
-        *a=vspop(stk);
-        err=(*a==NULL);
+    if(s) {
+        *s=vspop(stk);
+        err=(*s==NULL);
     }
-    if(!err && b) {
-        *b=vspop(stk);
-        err=(*b==NULL);
+    if(!err && f) {
+        *f=vspop(stk);
+        err=(*f==NULL);
     }
-    return (err==0);
+    return (err==0)?0:-8;
 }
 
-static void valfree(Value* a,Value* b) {
-    if(*a) valdel(a);
-    if(*b) valdel(b);
+static void valfree(Value* f,Value* s) {
+    if(*f) valdel(f);
+    if(*s) valdel(s);
 }
 
 static int valins(Stack* stk,double a) {
-    return vspush(stk,valnew(1,a));
+    if(vspush(stk,valnew(1,a))) return 0;
+    else return -1000;
 }
 
 static int valbool(Stack* stk,int res) {
     Value nv=(res)?valnew(0,"1"):valnew(0,"0");
-    return vspush(stk,nv);
+    if(vspush(stk,nv)) return 0;
+    else return -1000;
 }
 
-#define gva valtonum(a)
-#define gvb valtonum(b)
+#define gvf valtonum(f)
+#define gvs valtonum(s)
 
-int add(Stack* stk) {
+
+int binary(Stack* stk,char op) {
+    int err=0;
+    Value f,s;
+    if((err=valget(stk,&f,&s))==0) {
+        if(op=='+') err=valins(stk,gvf+gvs);
+        else if(op=='*') err=valins(stk,gvf*gvs);
+        valfree(&f,&s);
+    }
+    return err;
+}
+
+int unary(Stack* stk,char op) {
     int r=0;
-    Value a,b;
-    if(valget(stk,&a,&b)) {
-        r=valins(stk,gva+gvb);
-        valfree(&a,&b);
+    Value f;
+    if((err=valget(stk,&f,NULL))==0) {
+        if(op=='-') err=valins(stk,(-1)*gvf);
+        else if(op=='/') err=valins(stk,1/gvf);
+        valfree(&f,NULL);
     }
-    return r;
+    return err;
 }
 
-int op(Stack* stk) {
-    int r=0;
-    Value a;
-    if(valget(stk,&a,NULL)) {
-        r=valins(stk,1*gva);
-        valfree(&a,NULL);
+int comp(Stack* stk,char op) {
+    int err=0;
+    Value f,s;
+    if((err=valget(stk,&f,&s))==0) {
+        if(op=='=') err=valbool(stk,valequ(f,s));
+        else if(op=='>') err=valbool(stk,gvf>gvs);
+        valfree(&f,&s);
     }
-    return r;
+    return err;
 }
 
-int prd(Stack* stk) {
-    int r=0;
-    Value a,b;
-    if(valget(stk,&a,&b)) {
-        r=valins(stk,gva*gvb);
-        valfree(&a,&b);
-    }
-    return r;
-}
 
-int inv(Stack* stk) {
-    int r=0;
-    Value a;
-    if(valget(stk,&a,NULL)) {
-        r=valins(stk,1/gva);
-        valfree(&a,NULL);
-    }
-    return r;
-}
-
-int equ(Stack* stk) {
-    int ret=0;
-    Value a,b;
-    if(valget(stk,&a,&b)) ret=valbool(stk,valequ(a,b));
-    return ret;
-}
-
-int grt(Stack* stk) {
-    int ret=0;
-    Value a,b;
-    if(valget(stk,&a,&b)) {
-        int r=gva>gvb;
-        valfree(&a,NULL);
-        ret=valbool(stk,r);
-    }
-    return ret;
-}
-
-#undef gva
-#undef gvb
+#undef gvf
+#undef gvs
 
 int out(Stack* stk) {
     Value val=vspop(stk);

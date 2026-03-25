@@ -4,25 +4,14 @@
 
 /* OPERADORES */
 
-int add(Stack* stk);
-/* suma */
+int binary(Stack* stk,char op);
+/* operaciones binarias: + add, * prd*/
 
-int op(Stack* stk);
-/* opuesto */
+int unary(Stack* stk,char op);
+/* operaciones unarias: - op, / inv */
 
-int prd(Stack* stk);
-/* producto */
-
-int inv(Stack* stk); 
-/* inverso */
-
-/* devolucion de valores booleanos */
-
-int equ(Stack* stk);
-/* igualdad entre dos valores, devuelve valor booleano */
-
-int grt(Stack* stk);
-/* dice si a mayor que b (punto de vista numerico) */
+int comp(Staci* stk,char op);
+/* comparacion = igualdad, > primero mayor que segundo */
 
 /* INOUT */
 

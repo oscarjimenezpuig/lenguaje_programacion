@@ -37,6 +37,9 @@ void prgprt();
 struct token_s* prcfnd(Value nom);
 /* da puntero al inicio del procedimiento */
 
+struct token_s* linnxt(struct token_s* tok);
+/* se busca la siguiente linea a partir del token, NULL si ya no hay mas */
+
 void prgdel();
 /* libera el espacio de todo el programa */
 
@@ -48,6 +51,8 @@ int prgerr();
 struct procedure_s {
     struct token_s* lin; /* puntero a la linea que se ejecuta */
     Variable var; /* variables del procedimiento */
+    Stack ins; /* pila de instrucciones */
+    Stack val; /* pila de valores */
     struct procedure_s* prv;
 };
 
@@ -55,8 +60,14 @@ typedef struct procedure_s* Execute;
 
 extern Execute execute;
 
-int prcnew();
+int prccll(Value nom);
+/* llamada a un procedimiento */
 
+int prgexe();
+/* ejecucion de un programa */
+
+int exeerr();
+/* errores de no cerrar los procedimientos de la ejecucion */
 
 
 
