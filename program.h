@@ -13,23 +13,49 @@
 
 typedef unsigned char Flag;
 
+/* insercion de programa */
+
 struct token_s {
     Flag typ;
     union {
-        Value val; //guarda valor o nombre de procedimiento
-        Instruction ins; //guarda la instruccion
+        Value val; /* guarda valor o nombre de procedimiento */
+        Instruction ins; /* guarda la instruccion */
     };
     struct token_s* nxt;
-}
+};
 
 typedef struct token_s* Program;
 
 extern Program program;
 
 int toknew(unsigned char typ,...);
-/* insercion de un nuevo token
+/* insercion de un nuevo token */
 
+void prgprt();
+/* impresion de todo el programa introducido como lista de tokens */
 
+struct token_s* prcfnd(Value nom);
+/* da puntero al inicio del procedimiento */
+
+void prgdel();
+/* libera el espacio de todo el programa */
+
+int prgerr();
+/* da el error de los tokens sin cerrar */
+
+/* ejecucion de programa */
+
+struct procedure_s {
+    struct token_s* lin; /* puntero a la linea que se ejecuta */
+    Variable var; /* variables del procedimiento */
+    struct procedure_s* prv;
+};
+
+typedef struct procedure_s* Execute;
+
+extern Execute execute;
+
+int prcnew();
 
 
 
