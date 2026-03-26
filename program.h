@@ -62,6 +62,12 @@ typedef struct procedure_s* Execute;
 
 extern Execute execute; //señala el procedimiento que se ejecuta
 
+int prcexe();
+/* ejecucion del siguiente procedimiento de la pila */
+
+int prcdel();
+/* borrado del ultimo procedimiento de la pila */
+
 int prccll(Value nom);
 /* llamada a un procedimiento */
 

@@ -34,8 +34,35 @@
 #define IF 24 /* inicio del condicional */
 #define FI 25 /* fin del condicional */
 
-#define ENDINS 26 /* marca el final de las instrucciones */
+#define ENDINS 25 /* marca el final de las instrucciones */
 
-#define INS {PRG,GRP,CLL,PRC,CRP,OUT,IN,NLN,TAB,ADD,OP,PRD,INV,EQU,GRT,LET,SET,GET,ARL,ARS,ARG} /* matriz de codigos de instrucciones */
+/* cadenas de instrucciones*/
+#define PRG "PROGRAM"
+#define RGP "END_PROGRAM"
+#define CLL "CALL"
+#define PRC "PROCEDURE"
+#define CRP "END_PROCEDURE"
+#define OUT "PRINT"
+#define IN "INPUT"
+#define NLN "NEWLINE"
+#define TAB "TAB"
+#define ADD "+"
+#define OP "-"
+#define PRD "*"
+#define INV "/"
+#define EQU "="
+#define GRT ">"
+#define LET "LET"
+#define SET "SET"
+#define GET "GET"
+#define ARL "ARRAY"
+#define ARS "ARRAY_SET"
+#define ARG "ARRAY_GET"
+#define JMP "JUMP"
+#define LAB "LABEL"
+#define IF "IF"
+#define FI "END_IF"
+
+
 #define SINS (ENDINS-1) /* numero de instrucciones */
 

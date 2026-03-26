@@ -130,6 +130,8 @@ static int procedures=0;
 
 Execute execute=NULL; /* pila de ejecucion */
 
+static struct procedure_s* pzero=NULL; /* procedimiento cero */
+
 static int jmp(Stack* sval,struct token_s** lin) {
     /* orden jmp a la linea dicha */
     Value nlab=vspop(sval);
@@ -193,10 +195,33 @@ static int call(Stack* sval) {
     Value npn=vspop(sval);
     if(npn) return prccll(npn);
     else return -8;
-}   
+} 
+
+static int prc() {
+    /* inicio del procedimiento (no hace nada) */
+    return 0;
+}
+
+static int crp() {
+    /* final del procedimiento, se cierra el actual procedimiento y se ejecuta el siguiente de la pila */
+    prcdel();
+    prcexe();
+    return 0;
+}
+
+static int prg() {
+    /* inicio del programa (no hace nada) */
+    return 0;
+}
+
+static int grp() {
+    /* final del programa (no hace nada) */
+    return 0;
+}
 
 #define sval (&(execute->val))
 #define lvar (&(execute->var))
+#define mvar (&(pzero->var))
 
 static int linexe(struct token_s** lin) {
     /* almacenamiento y ejecucion de una pila */
@@ -250,19 +275,19 @@ static int linexe(struct token_s** lin) {
                     err=let(lvar,sval);
                     break;
                 case(SET):
-                    err=set(lvar,sval);
+                    err=set(lvar,mvar,sval);
                     break;
                 case(GET):
-                    err=get(lvar,sval);
+                    err=get(lvar,mvar,sval);
                     break;
                 case(ARL):
                     err=arl(lvar,sval);
                     break;
                 case(ARS):
-                    err=ars(lvar,sval);
+                    err=ars(lvar,mvar,sval);
                     break;
                 case(ARG):
-                    err=arg(lvar,sval);
+                    err=arg(lvar,mvar,sval);
                     break;
                 case(JMP):
                     err=jmp(sval,lin);
@@ -279,6 +304,18 @@ static int linexe(struct token_s** lin) {
                 case(CLL):
                     err=call(sval);
                     break;
+                case(PRC):
+                    err=prc();
+                    break;
+                case(CRP):
+                    err=crp();
+                    break;
+                case(PGR):
+                    err=pgr();
+                    break;
+                case(RGP):
+                    err=rgp();
+                    break;
             }
         }           
     }
@@ -288,19 +325,6 @@ static int linexe(struct token_s** lin) {
 #undef sval
 #undef lvar
 
-static int prcexe() {
-    /* ejecucion del ultimo procedimiento de la pila */
-    int err=0;
-    if(execute) {
-        struct token_s* pl=execute->lin;
-        while(pl && err==0) {
-            err=linexe(&pl);
-            if(!execute->nnl) pl=linnxt(pl);
-            else execute->nnl=0;
-        }
-    }
-    return err;
-}           
 
 static int prcnew(struct token_s* tok) {
     /* se crea un nuevo procedimiento */
@@ -313,13 +337,25 @@ static int prcnew(struct token_s* tok) {
             prc->nnl=0;
             prc->prv=execute;
             execute=prc;
+            if(!pzero) pzero=prc;
             return 0;
         } else return -1000;
     } else return -7; /* procedimiento no encontrado */
 }
 
-static int prcdel() {
-    /* borrado del ultimo procedimiento de la pila */
+int prcexe() {
+    int err=0;
+    if(execute) {
+        struct token_s* pl=execute->lin;
+        while(pl && err==0) {
+            err=linexe(&pl);
+            if(!execute->nnl) pl=linnxt(pl);
+            else execute->nnl=0;
+        }
+    }
+    return err;
+}          
+int prcdel() {
     if(execute) {
         --procedures;
         struct procedure_s* tdel=execute;
@@ -346,8 +382,9 @@ int prgexe() {
     int err=0;
     if((err=prcnew(program))==0) {
         err=prcexe();
-        prcdel();
+        while(execute) prcdel();
     }
+    prgdel();
     return err;
 }
 
