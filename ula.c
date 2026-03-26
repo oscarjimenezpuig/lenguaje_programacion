@@ -47,7 +47,7 @@ int binary(Stack* stk,char op) {
 }
 
 int unary(Stack* stk,char op) {
-    int r=0;
+    int err=0;
     Value f;
     if((err=valget(stk,&f,NULL))==0) {
         if(op=='-') err=valins(stk,(-1)*gvf);
@@ -77,9 +77,9 @@ int out(Stack* stk) {
     if(val) {
         printf(val);
         valdel(&val);
-        return 1;
+        return 0 ;
     }
-    return 0;
+    return -8;
 }
 
 int in(Stack* stk) {
@@ -91,40 +91,50 @@ int in(Stack* stk) {
     }
     *pe=EOS;
     Value nv=valnew(0,entrada);
-    return vspush(stk,nv);
+    if(vspush(stk,nv)) return 0;
+    else return -1000;
 }
 
-void nln() {
+int nln() {
     printf("\n");
+    return 0;
 }
 
-void tab() {
+int tab() {
     for(int k=0;k<TABSPC;k++) printf(" ");
+    return 0;
 }
 
 int let(Variable* var,Stack* stk) {
     Value nom=vspop(stk);
-    if(nom) return varnew(var,nom,1);
-    return 0;
+    if(nom) {
+        if(varnew(var,nom,1)) return 0;
+        else return -1000;
+    } else return -8;
 }
 
-int set(Variable* var,Stack*stk) {
+int set(Variable* var,Variable* vma,Stack*stk) {
     Value nom=vspop(stk);
     if(nom) {
         Value val=vspop(stk);
         if(val) {
-            return varset(var,nom,0,val);
-        }
-    }
-    return 0;
+            if(varset(var,nom,0,val)) return 0;
+            else if(varset(vma,nom,0,val)) return 0;
+            else return -9;
+        } else return -8;
+    } else return -8;
 }
 
-int get(Variable* var,Stack* stk) {
+int get(Variable* var,Variable* vma,Stack* stk) {
     Value nom=vspop(stk);
     if(nom) {
         Value val=varget(var,nom,0);
-        if(val) return vspush(stk,val);
-    }
+        val=(val)?val:varget(vma,nom,0);
+        if(val) {
+            if(vspush(stk,val)) return 0;
+            else return -1000;
+        } else return -10;
+    } else return -8;
     return 0;
 }
 
@@ -134,36 +144,42 @@ int arl(Variable* var,Stack* stk) {
         Value val=vspop(stk);
         if(val) {
             int num=valtonum(val);
-            return varnew(var,nom,num);
-        }
-    }
-    return 0;
+            if(varnew(var,nom,num)) return 0;
+            else return -1000;
+        } else return -8;
+    } else return -8;
 }
 
-int ars(Variable* var,Stack* stk) {
+int ars(Variable* var,Variable* vma,Stack* stk) {
     Value nom=vspop(stk);
     if(nom) {
         Value vnum=vspop(stk);
         if(vnum) {
             int num=valtonum(vnum);
             Value val=vspop(stk);
-            if(val) return varset(var,nom,num,val);
-        }
-    }
-    return 0;
+            if(val) {
+                if(varset(var,nom,num,val)) return 0;
+                else if(varset(vma,nom,num,val)) return 0;
+                else return -9;
+            } else return -8;
+        } else return -8;
+    } else return -8;
 }
 
-int arg(Variable* var,Stack* stk) {
+int arg(Variable* var,Variable* vma,Stack* stk) {
     Value nom=vspop(stk);
     if(nom) {
         Value vnum=vspop(stk);
         if(vnum) {
             int num=valtonum(vnum);
             Value val=varget(var,nom,num);
-            if(val) return vspush(stk,val);
-        }
-    }
-    return 0;
+            val=(val)?val:varget(vma,nom,num);
+            if(val) {
+                if(vspush(stk,val)) return 0;
+                else return -1000;
+            } else return -10;
+        } else return -8;
+    } else return -8;
 }
 
 

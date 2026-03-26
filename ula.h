@@ -10,7 +10,7 @@ int binary(Stack* stk,char op);
 int unary(Stack* stk,char op);
 /* operaciones unarias: - op, / inv */
 
-int comp(Staci* stk,char op);
+int comp(Stack* stk,char op);
 /* comparacion = igualdad, > primero mayor que segundo */
 
 /* INOUT */
@@ -24,30 +24,30 @@ int out(Stack* stk);
 int in(Stack* stk);
 /* entrada de un valor que se deposita en el stack */
 
-void nln();
+int nln();
 /* nueva linea */
 
-void tab();
+int tab();
 /* tabulacion */
 
 /* VARIABLES */
 
-int let(Variable* var,Stack* stk);
+int let(Variable* vpr,Stack* stk);
 /* se crea una nueva variable */
 
-int set(Variable* var,Stack* stk);
+int set(Variable* var,Variable* vma,Stack* stk);
 /* se le asigna a una variable un valor */
 
-int get(Variable* var,Stack* stk);
+int get(Variable* var,Variable* vma,Stack* stk);
 /* conseguimos el valor de una variable */
 
 int arl(Variable* var,Stack* stk);
 /* creamos una matriz de valores */
 
-int ars(Variable* var,Stack* stk);
+int ars(Variable* var,Variable* vma,Stack* stk);
 /* asignamos el valor de una matriz en una determinada posicion */
 
-int arg(Variable* var,Stack* stk);
+int arg(Variable* var,Variable* vma,Stack* stk);
 /* conseguimos el valor de una determinada matriz en una posicon */
 
 

@@ -49,16 +49,18 @@ int prgerr();
 /* ejecucion de programa */
 
 struct procedure_s {
+    struct token_s* ini; /* puntero a la linea inicial del procedimiento */
     struct token_s* lin; /* puntero a la linea que se ejecuta */
     Variable var; /* variables del procedimiento */
     Stack ins; /* pila de instrucciones */
     Stack val; /* pila de valores */
+    Flag nnl; /* bandera que si vale 1 no ejecuta el salto a la siguiente linea */
     struct procedure_s* prv;
 };
 
 typedef struct procedure_s* Execute;
 
-extern Execute execute;
+extern Execute execute; //señala el procedimiento que se ejecuta
 
 int prccll(Value nom);
 /* llamada a un procedimiento */

@@ -130,14 +130,80 @@ static int procedures=0;
 
 Execute execute=NULL; /* pila de ejecucion */
 
-#define sval (&(execute->val))
+static int jmp(Stack* sval,struct token_s** lin) {
+    /* orden jmp a la linea dicha */
+    Value nlab=vspop(sval);
+    *lin=NULL;
+    if(nlab) {
+        struct token_s* ptok=execute->ini;
+        int find=0;
+        while(ptok && !find) {
+            if((ptok->typ & TINS) && ptok->ins==LAB) {
+                struct token_s* ntok=ptok->nxt;
+                if((ntok->typ & TVAL) && (valequ(ntok->val,nlab))) {
+                    find=1;
+                    *lin=ptok;
+                }
+            }
+        }
+        if(find) {
+            execute->nnl=1;
+            return 0;
+        } else return -11;
+    } else return -8;
+}
 
-static int linexe(struct token_s* lin) {
+static int lab(Stack* sval) {
+    /* orden label (no hace nada) */
+    vspop(sval);
+    return 0;
+}
+
+static int ifs(Stack* sval,struct token_s** lin) {
+    /* condicion if si se cumple, sigue a la linea siguiente */
+    Value val=vspop(sval);
+    if(val) {
+        if(valisfalse(val)) {
+            struct token_s* ptok=*lin;
+            int nifs=0;
+            do {
+                if((ptok->typ & TINS)) {
+                    if(ptok->ins==IF) ++nifs;
+                    else if(ptok->ins==FI)--nifs;
+                }
+                ptok=ptok->nxt;
+            }while(ptok && nifs>0);
+            if(nifs==0) {
+                *lin=ptok;
+                execute->nnl=1;
+                return 0;
+            }
+            else return -12; 
+        } else return 0;
+    } else return -8;
+}
+
+static int ife(Stack* sval) {
+    /* clausula final del condicional (no hace nada) */
+    return 0;
+}
+
+static int call(Stack* sval) {
+    /* llamada a un nuevo procedimiento */
+    Value npn=vspop(sval);
+    if(npn) return prccll(npn);
+    else return -8;
+}   
+
+#define sval (&(execute->val))
+#define lvar (&(execute->var))
+
+static int linexe(struct token_s** lin) {
     /* almacenamiento y ejecucion de una pila */
     int err=0;
-    if(lin) {
-        if((lin->typ & (SPRC|SMAN))==0) {
-            struct token_s* tok=lin;
+    if(*lin) {
+        if(((*lin)->typ & (SPRC|SMAN))==0) {
+            struct token_s* tok=*lin;
             while(tok && (tok->typ & (ELIN|EMAN|EPRC))==0) {
                 if((tok->typ & TVAL)) {
                     vspush(&(execute->val),valcpy(tok->val));
@@ -163,10 +229,55 @@ static int linexe(struct token_s* lin) {
                     err=unary(sval,'/');
                     break;
                 case(EQU):
-                    err=cmp(sval,'=');
+                    err=comp(sval,'=');
                     break;
                 case(GRT):
-                    err=cmp(sval,'>');
+                    err=comp(sval,'>');
+                    break;
+                case(OUT):
+                    err=out(sval);
+                    break;
+                case(IN):
+                    err=in(sval);
+                    break;
+                case(NLN):
+                    err=nln();
+                    break;
+                case(TAB):
+                    err=tab();
+                    break;
+                case(LET):
+                    err=let(lvar,sval);
+                    break;
+                case(SET):
+                    err=set(lvar,sval);
+                    break;
+                case(GET):
+                    err=get(lvar,sval);
+                    break;
+                case(ARL):
+                    err=arl(lvar,sval);
+                    break;
+                case(ARS):
+                    err=ars(lvar,sval);
+                    break;
+                case(ARG):
+                    err=arg(lvar,sval);
+                    break;
+                case(JMP):
+                    err=jmp(sval,lin);
+                    break;
+                case(LAB):
+                    err=lab(sval);
+                    break;
+                case(IF):
+                    err=ifs(sval,lin);
+                    break;
+                case(FI):
+                    err=ife(sval);
+                    break;
+                case(CLL):
+                    err=call(sval);
                     break;
             }
         }           
@@ -174,14 +285,18 @@ static int linexe(struct token_s* lin) {
     return err;
 }
 
+#undef sval
+#undef lvar
+
 static int prcexe() {
     /* ejecucion del ultimo procedimiento de la pila */
     int err=0;
     if(execute) {
         struct token_s* pl=execute->lin;
         while(pl && err==0) {
-            err=linexe(pl);
-            pl=linnxt(pl);
+            err=linexe(&pl);
+            if(!execute->nnl) pl=linnxt(pl);
+            else execute->nnl=0;
         }
     }
     return err;
@@ -193,8 +308,9 @@ static int prcnew(struct token_s* tok) {
         struct procedure_s* prc=malloc(sizeof(struct procedure_s));
         if(prc) {
             ++procedures;
-            prc->lin=tok;
+            prc->ini=prc->lin=tok;
             prc->var=NULL;
+            prc->nnl=0;
             prc->prv=execute;
             execute=prc;
             return 0;
