@@ -2,8 +2,8 @@
 #include "program.h"
 
 /* reglas
- * Instrucciones en MAYUSCULAS
- * Variables en minusculas
+ * Instrucciones en todo MAYUSCULAS
+ * Variables empiezan en minusculas
  * Procedimientos empiezan por mayuscula y siguen en minuscula
  */
 

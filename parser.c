@@ -22,7 +22,7 @@ static closefile() {
     file=NULL;
 }
 
-static int essep(char c) {
+static int issep(char c) {
     /* comprueba si el caracter es uno de los separadores */
     const char CSEP=SEP;
     char* pc=CSEP;
@@ -33,8 +33,47 @@ static int essep(char c) {
     return 0;
 }
 
-static int esins() {
+static int isins() {
     /* mira si el word es instruccion Y determina cual es */
+    const char STINS[]=INS;
+    for(int k=0;k<=SINS;k++) {
+        if(valequ(word,STINS[k])) return k+1;
+    }
+    return 0;
+}
+
+#define ISCAP(X) ((X)>='A' && (X)<='Z')
+#define ISMIN(X) ((X)>='a' && (X)<='z')
+
+static int chkcap() {
+    /* mira si es un procedimiento=2, variable=3 o instruccion=1 */
+    char* pw=word;
+    int type=0;
+    if(*pw!=EOS) {
+        if(ISCAP(*pw)) {
+            type=2;
+            pw++;
+            if(*pw!=EOS) if(ISCAP(*pw)) type=1;
+        } else if(ISMIN(*pw)) type=3;
+    }
+    if(type==1) {
+        while(*pw!=EOS) {
+            if(!ISCAP(*pw)) return 0;
+            pw++;
+        }
+    }
+    return type;
+}
+        
+#define ISNUM(X) ((X)>='0' && (X)<='9')
+
+static int chknum() {
+    char* pw=word;
+    Flag has_punto=0;
+    if(
+
+static Flag readword()
+
 
 
 static int readword() {
