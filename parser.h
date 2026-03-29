@@ -9,10 +9,10 @@
 
 /* cadenas de instrucciones*/
 #define SPRG "PROGRAM"
-#define SRGP "END_PROGRAM"
+#define SGRP "END_PROGRAM"
 #define SCLL "CALL"
-#define SPRC "PROCEDURE"
-#define SCRP "END_PROCEDURE"
+#define SSPR "PROCEDURE"
+#define SEPR "END_PROCEDURE"
 #define SOUT "PRINT"
 #define SIN "INPUT"
 #define SNLN "NEWLINE"
@@ -34,9 +34,10 @@
 #define SIF "IF"
 #define SFI "END_IF"
 
-#define INS {SPRG,SRGP,SCLL,SPRC,SCRP,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI}
+#define INS {SPRG,SGRP,SCLL,SSPR,SEPR,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI}
 
-#define SEP " [](){}"
+#define CSEP " [](){}" /* separadores */
+#define FDL '\n' /* final de linea */
 
 #define WMLEN 2048 /* maxima dimension de la palabra descargada */
 

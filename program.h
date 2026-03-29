@@ -28,7 +28,7 @@ typedef struct token_s* Program;
 
 extern Program program;
 
-int toknew(unsigned char typ,...);
+int toknew(Flag typ,...);
 /* insercion de un nuevo token */
 
 void prgprt();

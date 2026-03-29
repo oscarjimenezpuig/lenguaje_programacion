@@ -311,10 +311,10 @@ static int linexe(struct token_s** lin) {
                     err=crp();
                     break;
                 case(PGR):
-                    err=pgr();
+                    err=prg();
                     break;
                 case(RGP):
-                    err=rgp();
+                    err=grp();
                     break;
             }
         }           
