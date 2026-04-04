@@ -1,14 +1,19 @@
 /* LP 26-3-26 */
 #include "parser.h"
 
-#define entnum(A) ((A)>='0' && (A)>='9')
+#define EOW ' '
+#define EOL '\n'
+
+#define entnum(A) ((A)>='0' && (A)<='9')
 #define entcap(A) ((A)>='A' && (A)<='Z')
 #define entlow(A) ((A)>='a' && (A)<='z')
 
-typedef char Word[WMLEN];
-
-typedef enum {NOS,SEP,EOL,EOP} Signal;
-typedef enum {NOT,NUM,LOW,MED,CAP} Type;
+typedef struct {
+    char str[WMLEN]; /* cadena que representa el word */
+    char end; /* nos dice el caracter final espacio,EOS o EOF */
+    Flag typ; /* tipo TVAL o TINS o 0*/
+    Flag ins; /* numero de instruccion en caso de que sea instruccion */
+} Word;
 
 static FILE* openfile(char* name) {
     /* se abre archivo */
@@ -23,129 +28,138 @@ static void closefile(FILE** file) {
     *file=NULL;
 }
 
-static int essep(char c) {
+static int issep(char c) {
     char* const SEP=CSEP;
     char* ps=SEP;
     while(*ps!=EOS) if(*ps++==c) return 1;
     return 0;
 }
 
-static Signal wordset(FILE* file,Word word) {
-    /* lee una palabra entera del fichero */
-    char* pw=word;
-    Signal s=NOS;
-    while(s==NOS) {
-        char c=fgetc(file);
-        if(essep(c)) s=SEP;
-        else if(c==FDL) s=EOL;
-        else if(c==EOF) s=EOP;
-        else *pw++=c;
+static int isnum(char* str) {
+    int punto;
+    int numero=0;
+    char* p=str;
+    if((punto=(*p=='.')) || *p=='-' || (numero=entnum(*p))) {
+        p++;
+        while(*p!=EOS) {
+            if(*p=='.') {
+                if(punto) return 0;
+                else punto=1;
+            } else if((numero=entnum(*p))==0) return 0;
+            p++;
+        }
     }
-    *pw=EOS;
-    return s;
+    return numero;
 }
-
-static int isnum(Word word) {
-    char* pw=word;
-    int point=0;
-    while(*pw!=EOS) {
-        if(*pw=='-' && pw!=word) return 0;
-        else if(*pw=='.') {
-            if(point) return 0;
-            point=1;
-        } else if(!entnum(*pw)) return 0;
-        pw++;
+        
+static int strequ(char* a,char* b) {
+    char* pa=a;
+    char* pb=b;
+    while(*pa!=EOS) {
+        if(*pa++!=*pb++) return 0;
     }
-    return 1;
-}
+    return (*pb==EOS);
+}       
 
-static Type capchk(Word word) {
-    char* pw=(word+1);
-    int iscap=-1;
-    if(*pw!=EOS) {
-        iscap=(entcap(*pw))?1:(entlow(*pw))?-1:0;
-    }
-    while(*pw!=EOS && iscap) {
-        if(entcap(*pw) && iscap!=1) return NOT;
-        else if(entlow(*pw) && iscap!=-1) return NOT;
-        pw++;
-    }
-    if(iscap==1) return CAP;
-    else if(iscap==-1) return MED;
-    else return NOT;
-}
-
-static int islow(Word word) {
-    char* pw=word;
-    while(*pw!=EOS) {
-        if(!entlow(*pw++)) return 0;
-    }
-    return 1;
-}
-
-static int isins(Word word) {
+static int isins(char* str) {
     char* const CSINS[]=INS;
     for(int k=0;k<SINS;k++) {
-        if(valequ(word,CSINS[k])) return k+1;
+        if(strequ(str,CSINS[k])) return k+1;
     }
     return 0;
 }
 
-static void wordins(Signal signal,Word word) {
-    /* classifica una palabra y la pone en el programa */
-    Flag tt=(signal==EOL)?ELIN:0;
-    Type t=NOT;
-    if(*word=='-' || *word=='.' || entnum(*word)) {
-        t=isnum(word)?NUM:NOT;
-    } else if(entcap(*word)) {
-        t=capchk(word);
-    } else if(entlow(*word)) {
-        t=islow(word)?LOW:NOT;
+static int islow(char* str) {
+    char* p=str;
+    ++p;
+    while(*p!=EOS) {
+        if(!entlow(*p)) return 0;
     }
-    if(t==NUM || t==LOW || t==MED) {
-        tt|=TVAL;
-        toknew(tt,word);
-    } else if(t==CAP) {
-        Instruction ins=isins(word);
-        if(ins) {
-            tt|=TINS;
-            switch(ins) {
-                case PGR:
-                    tt|=SMAN;
-                    break;
-                case RGP:
-                    tt|=EMAN;
-                    break;
-                case PRC:
-                    tt|=SPRC;
-                    break;
-                case CRP:
-                    tt|=EPRC;
-                    break;
-            }
-            toknew(tt,ins);
-        }
-    }
-    if(tt & ELIN) toknew(SLIN);
+    return 1;
 }
 
-static int programset(char* name) {
+static void wordprt(Word w) {
+    printf("type->%i word->%s ins->%i end->%i\n",w.typ,w.str,w.ins,w.end) ;
+}
+
+static Word wordget(FILE* file) {
+    /* lee una palabra entera y la clasifica */
+    Word w;
+    w.typ=0;
+    w.end=2;
+    w.ins=0;
+    Flag hcom=0;
+    char* pw=w.str;
+    while(w.end==2) {
+        char c=fgetc(file);
+        if(c=='"') {
+            if(hcom==0) hcom=1;
+            else if(hcom==1) {
+                w.end=EOW;
+                w.typ=TVAL;
+            }
+        } else if(c==EOL || c==EOF) {
+            if(hcom) w.typ=TVAL;
+            w.end=c;
+        } else if(issep(c)) {
+            if(hcom) *pw++=c;
+            else w.end=EOW;
+        } else {
+            *pw++=c;
+        }
+    }
+    *pw=EOS;
+    if(w.typ==0 && *(w.str)!=EOS) {
+        if(isnum(w.str)) w.typ=TVAL;
+        else if((w.ins=isins(w.str))) w.typ=TINS;
+        else if(islow(w.str)) w.typ=TVAL;
+    }
+    return w;
+}
+
+static void wordins(Word word) {
+    /* introduce la palabra en el programa */
+    wordprt(word); //dbg
+    Flag type=word.typ;
+    if(word.end==EOL || word.end==EOF) type|=ELIN;
+    if((type & TINS)) {
+        if(word.ins==PRC) type|=SPRC;
+        else if(word.ins==CRP) type|=EPRC;
+        else if(word.ins==PGR) type|=SMAN;
+        else if(word.ins==RGP) type|=EMAN;
+    }
+    if(type) printf("-->program type=%i ins=%i word=%s\n",type,word.ins,word.str);//dbg
+    if((type & TVAL)) {
+        toknew(type,word.str);
+    } else if((type & TINS)) {
+        toknew(type,word.ins);
+    } else if(type) {
+        toknew(type);
+    }
+    if(type & ELIN) {
+        toknew(SLIN);
+        printf("-->newline\n"); //dbg
+    }
+
+}
+
+static int parse(char* name) {
+    /* transforma el codigo del archivo en un programa */
     FILE* file=openfile(name);
     if(file) {
-        Word word;
-        Signal sig=NOS;
-        while(sig!=EOP) {
-            sig=wordset(file,word);
-            wordins(sig,word);
-        }
+        Word w;
+        do {
+            wordins((w=wordget(file)));
+        } while(w.end!=EOF);
         closefile(&file);
-        prgprt(); /* dbg de impresion de programa */
+        prgprt();
         return 0;
-    } 
+    }
     return -13;
 }
 
-static int programexe() {
+
+static int exe() {
     /* ejecucion del programa y final */
     int err=prgexe();
     if(err==0) {
@@ -156,8 +170,8 @@ static int programexe() {
 
 int make(char* name) {
     int err=0;
-    if((err=programset(name))) {
-        err=programexe();
+    if((err=parse(name))) {
+        err=exe();
     }
     return err;
 }

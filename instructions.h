@@ -8,8 +8,8 @@
 
 /* main= instruccion donde marca el primer procedimiento a ejecutarse */
 #define NOI 0 /* instruccion nula */
-#define PGR 1 /* inicio del programa*/
-#define RGP 2 /* final del programa */
+#define PRG 1 /* inicio del programa*/
+#define GRP 2 /* final del programa */
 #define CLL 3 /* llamada a un procedimiento */
 #define PRC 4 /* inicio de procedimiento */
 #define CRP 5 /* fin del procedimiento */
@@ -33,8 +33,11 @@
 #define LAB 23 /* label, lugar hacia donde saltara una instruccion */
 #define IF 24 /* inicio del condicional */
 #define FI 25 /* fin del condicional */
+#define LOP 26 /* inicio de loop */
+#define POL 27 /* final de loop */
+#define REM 28 /* comentario */
 
-#define ENDINS 25 /* marca el final de las instrucciones */
+#define ENDINS 29 /* marca el final de las instrucciones */
 
 
 #define SINS (ENDINS-1) /* numero de instrucciones */

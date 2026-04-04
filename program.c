@@ -2,392 +2,356 @@
 
 #include "program.h"
 
-/* insercion de programa */
+/* program set */
 
-Program program=NULL;
+struct token_s {
+    struct {
+        char isi : 1; /* dice que el token es del tipo instruccion */
+        char isv : 1; /* dice que el token es del tipo valor */
+        char eol : 1; /* el token indica un salto de linea */
+    };  
+    union {
+        Instruction ins; /* instuccion almacenada */
+        Value val; /* valor almacenado */
+    };
+    struct token_s* nxt;
+};
+
+typedef struct token_s* Token;
+
+typedef struct {
+    Token frt;
+    Token lst;
+} Program;
+
+static Program program={NULL,NULL};
 
 static int tokens=0;
 
-#define PRCI 1
-#define LINI 2
-#define MANI 4
-
-static struct token_s* lastprg() {
-    if(program) {
-        struct token_s* pp=program;
-        while(pp->nxt) pp=pp->nxt;
-        return pp;
-    }
-    return NULL;
-}
-
-int toknew(Flag typ,...) {
-    static Flag ini=0;
-    if(!(ini & MANI) && !(typ & SMAN)) return -1; /* inicio de programa no realizado */
-    else if((typ & SMAN)) {
-        typ|=(SPRC|SLIN);
-        ini|=(MANI|PRCI);
-        return 0;
-    }
-    if((typ & SPRC) && (ini & PRCI)) return -2; /* procedimiento ya iniciado */
-    else if((typ & SPRC)) {
-        ini|=PRCI;
-        typ|=(SPRC|SLIN);
-    }
-    if((typ & SLIN) && (ini & LINI)) return -3; /* linea ya iniciada */
-    if((typ & EMAN) && !(ini & MANI)) return -4; /* programa no iniciado */
-    else if(typ & EMAN) {
-        typ|=(EPRC|ELIN);
-        ini&=~(MANI|PRCI|LINI);
-    }
-    if((typ & EPRC) && !(ini & PRCI)) return -6; /* procedimiento no iniciado */
-    else if(typ & EPRC) {
-        typ|=ELIN;
-        ini&=~(PRCI|LINI);
-   }
-    if((typ & ELIN) && !(ini & LINI)) return -5; /* linea no iniciada */
-    else if(typ & ELIN) ini&=~LINI;
-    struct token_s* tok=malloc(sizeof(struct token_s));
-    if(tok) {
+static Token toknew() {
+    Token nt=malloc(sizeof(struct token_s));
+    if(nt) {
+        nt->isi=nt->eol=nt->isv=0;
+        nt->nxt=NULL;
         ++tokens;
-        tok->typ=typ;
-        va_list list;
-        va_start(list,typ);
-        if((typ & (SPRC|TVAL))) {
-            tok->val=va_arg(list,Value);
-        } else if ((typ & TINS)) {
-            tok->ins=va_arg(list,int);
-        }
-        va_end(list);
-        struct token_s* ant=lastprg();
-        if(ant) ant->nxt=tok;
-        else program=tok;
+    }
+    return nt;
+}
+
+static void tokset(Token tok) {
+    if(!program.frt) {
+        program.frt=program.lst=tok;
+    } else {
+        program.lst->nxt=tok;
+        program.lst=tok;
+    }
+}
+
+int tokins(Instruction i) {
+    Token nt=toknew();
+    if(nt) {
+        nt->isi=1;
+        nt->ins=i;
+        tokset(nt);
         return 0;
-   } else return -1000; /* error de memoria */
-}
-
-static void tokprt(struct token_s* tok) {
-    if(tok) {
-        Flag typ=tok->typ;
-        if(typ & SMAN) printf("Program\n");
-        else if(typ & EMAN) printf("End program\n");
-        else if(typ & SPRC) printf("   Procedure: %s\n",tok->val);
-        else if (typ & EPRC) printf("   End procedure");
-        else if(typ & SLIN) printf("     ");
-        if(typ & TINS) printf("I(%i) ",tok->ins);
-        else if(typ & TVAL) printf("V(%s) ",tok->val);
-        if(typ & ELIN) printf("\n");
     }
+    return -1000;
 }
 
-void prgprt() {
-    struct token_s* pt=program;
-    while(pt) {
-        tokprt(pt);
-        pt=pt->nxt;
+int tokval(char* str) {
+    Token nt=toknew();
+    if(nt) {
+        nt->val=valnew(0,str);
+        nt->isv=1;
+        tokset(nt);
+        return 0;
     }
+    return -1000;
 }
 
-struct token_s* prcfnd(Value nom) {
-    struct token_s* pt=program;
-    while(pt) {
-        if((pt->typ & SPRC) && (valequ(pt->val,nom))) return pt;
-        pt=pt->nxt;
+int tokeol() {
+    Token nt=toknew();
+    if(nt) {
+        nt->eol=1;
+        tokset(nt);
+        return 0;
     }
-    return NULL;
+    return -1000;
 }
 
-struct token_s* linnxt(struct token_s* tok) {
-    struct token_s* pt=tok;
-    if(pt && pt->nxt) {
-        while(pt && (pt->typ & SLIN)==0) {
-            pt=pt->nxt;
-        }
-        return pt;
-    }
-    return NULL;
-}
-
-static void tokdel(struct token_s* tok) {
-    if(tok) {
-        tokdel(tok->nxt);
-        free(tok);
+static void tokdel(Token t) {
+    if(t) {
+        tokdel(t->nxt);
+        if(t->isi==0) valdel(&(t->val));
+        free(t);
         --tokens;
     }
 }
 
 void prgdel() {
-    tokdel(program);
+    tokdel(program.frt);
+    program.frt=program.lst=NULL;
 }
 
 int prgerr() {
     return tokens;
 }
-  
-/* ejecucion del programa */
 
-static int procedures=0;
+/* program exe */
 
-Execute execute=NULL; /* pila de ejecucion */
+struct prcexe_s{
+    Token ini,act; /* token donde se inicia el procedimiento y donde esta actualmente */
+    Variable var; /* almacen de variables */
+    Stack sin,sva; /* pilas */
+    struct prcexe_s* prv; /* apunta al procedimiento previo */
+};
 
-static struct procedure_s* pzero=NULL; /* procedimiento cero */
+typedef struct prcexe_s* Prcexe;
 
-static int jmp(Stack* sval,struct token_s** lin) {
-    /* orden jmp a la linea dicha */
-    Value nlab=vspop(sval);
-    *lin=NULL;
-    if(nlab) {
-        struct token_s* ptok=execute->ini;
-        int find=0;
-        while(ptok && !find) {
-            if((ptok->typ & TINS) && ptok->ins==LAB) {
-                struct token_s* ntok=ptok->nxt;
-                if((ntok->typ & TVAL) && (valequ(ntok->val,nlab))) {
-                    find=1;
-                    *lin=ptok;
-                }
-            }
+Prcexe prcexe=NULL;
+Prcexe prcmain=NULL;
+
+static int prcexes=0;
+
+static int prcnew(char ismain) {
+    /* creacion de un nuevo procedimiento */
+    Prcexe np=malloc(sizeof(struct prcexe_s));
+    if(np) {
+        np->ini=np->act=NULL;
+        np->var=NULL;
+        np->sin=np->sva=NULL;
+        np->prv=prcexe;
+        prcexe=np;
+        if(ismain) prcmain=np;
+        ++prcexes;
+        return 0;
+    }
+    return -1000;
+}
+
+static void prcdel(Prcexe* p) {
+    if(p && *p) {
+        prcdel(&((*p)->prv));
+        varsdel(&((*p)->var));
+        vsdel(&((*p)->sva));
+        isdel(&((*p)->sin));
+        *p=NULL;
+        --prcexes;
+    }
+}
+
+static Token tokfnd(Instruction ins,Value val,Token ini) {
+    /* desde el token del inicio busca la instruccion demandada con valor demandado */
+    Token p=ini;
+    char cont=1;
+    while(cont) {
+        if(p->isi) {
+            if((ins==PRG && p->ins==PRG)) return p;
+            else if(ins==p->ins) {
+                p=p->nxt;
+                if(p->isv && valequ(p->val,val)) return p;
+            } else if(p->ins==GRP || p->ins==CRP) cont=0;
         }
-        if(find) {
-            execute->nnl=1;
+        p=p->nxt;
+    }
+    return NULL;
+}
+
+static Token nxtlin(Token ini) {
+    /* busca la siguiente linea a partir del inicio */
+    Token p=ini;
+    while(p && p->eol==0) p=p->nxt;
+    return p->nxt;
+}
+
+static void linfill(Prcexe prc,Token ini) {
+    /* se llena el stack de todo lo que hay en la linea */
+    Token p=ini;
+    if(p) {
+        do {
+            if(p->isi) ispush(&(prc->sin),p->ins);
+            else if(p->val) vspush(&(prc->sva),valcpy(p->val));
+        }while(p->eol==0);
+    }
+}
+
+static int calcord(Stack* sval,Instruction i) {
+    /* instrucciones relativas al calculo */
+    char op=0;
+    switch(i) {
+        case ADD:
+           op='+';
+           break;
+        case OP:
+           op='-';
+           break;
+        case PRD:
+           op='*';
+           break;
+        case INV:
+           op='/';
+           break;
+        case EQU:
+           op='=';
+           break;
+        case GRT:
+           op='>';
+           break;
+    }
+    switch(i) {
+        case ADD:
+        case PRD:
+            return binary(sval,op);
+        case OP:
+        case INV:
+            return unary(sval,op);
+        case EQU:
+        case GRT:
+            return comp(sval,op);
+        default:
+            return 0;
+            
+    }
+}
+
+static int varord(Variable* var,Stack* sval,Instruction i) {
+    /* instrucciones relativas a las variables */
+    Variable* vma=&(prcmain->var);
+    switch(i) {
+        case LET:
+            return let(var,sval);
+        case SET:
+            return set(var,vma,sval);
+        case GET:
+            return get(var,vma,sval);
+        case ARL:
+            return arl(var,sval);
+        case ARS:
+            return ars(var,vma,sval);
+        case ARG:
+            return arg(var,vma,sval);
+        default:
+            return 0;
+    }
+}
+
+static int inoutord(Stack* sval,Instruction i) {
+    /* instrucciones relativas a la entrada y la salida */
+    switch(i) {
+        case IN:
+            return in(sval);
+        case OUT:
+            return out(sval);
+        case NLN:
+            return nln();
+        default:
+            return 0;
+    }
+}
+
+static int prcord(Stack* sval,Instruction i) {
+    /* gestion de la rutina CALL y la destruccion de procedimientos */
+    /* cuando llamamos con la instruccion NOI se crea la nueva rutina */
+    /* cuando se llega al end se destruye el procedimiento */
+    /* procemiento main destruido quiere decir que el programa se para */
+    int err=0;
+    if(i==NOI) {
+        Token t=tokfnd(PRG,"",program.frt);
+        if(t) {
+            err=prcnew(1);
+            if(!err) {
+                prcexe->ini=prcexe->act=t;
+            }
+        } else err=-4;
+    } else if(i==CLL) {
+        Value val=vspop(sval);
+        if(val) {
+            Token t=tokfnd(PRC,val,program.frt);
+            if(t) {
+                err=prcnew(0);
+                if(!err) {
+                    prcexe->ini=prcexe->act=t;
+                }
+            } else err=-7;
+        } else err=-8;
+    } else if(i==GRP || i==CRP) {
+        Prcexe tdel=prcexe;
+        if(tdel) {
+            prcexe=tdel->prv;
+            tdel->prv=NULL;
+            prcdel(&(tdel));
+            if(i==GRP || !prcexe) prcmain=NULL;
+        }
+    }
+    return err;
+}
+
+static int jmpord(Stack* sval) {
+    /* orden jump */
+    Value val=vspop(sval);
+    if(val) {
+        Token t=tokfnd(LAB,val,prcexe->ini);
+        if(t) {
+            prcexe->act=t;
             return 0;
         } else return -11;
     } else return -8;
 }
 
-static int lab(Stack* sval) {
-    /* orden label (no hace nada) */
-    vspop(sval);
-    return 0;
-}
-
-static int ifs(Stack* sval,struct token_s** lin) {
-    /* condicion if si se cumple, sigue a la linea siguiente */
+static int condord(Stack* sval) {
+    /* orden condicional */
     Value val=vspop(sval);
     if(val) {
         if(valisfalse(val)) {
-            struct token_s* ptok=*lin;
-            int nifs=0;
-            do {
-                if((ptok->typ & TINS)) {
-                    if(ptok->ins==IF) ++nifs;
-                    else if(ptok->ins==FI)--nifs;
+            Token t=prcexe->act->nxt;
+            int conds=1;
+            while(t && (t->isi==0 || (t->ins!=CRP && t->ins!=GRP))) {
+                if(t->isi) {
+                    if(t->ins==IF) ++conds;
+                    else if(t->ins==FI) {
+                        --conds;
+                        if(conds==0) {
+                            prcexe->act=t->nxt;
+                            return 0;
+                        }
+                    }
                 }
-                ptok=ptok->nxt;
-            }while(ptok && nifs>0);
-            if(nifs==0) {
-                *lin=ptok;
-                execute->nnl=1;
-                return 0;
+                t=t->nxt;
             }
-            else return -12; 
-        } else return 0;
+            return -12;
+        } else {
+            prcexe->act=prcexe->act->nxt;
+            return 0;
+        }
     } else return -8;
 }
 
-static int ife(Stack* sval) {
-    /* clausula final del condicional (no hace nada) */
-    return 0;
-}
+static int loopord(Stack* sval) {
+    /* loop */
 
-static int call(Stack* sval) {
-    /* llamada a un nuevo procedimiento */
-    Value npn=vspop(sval);
-    if(npn) return prccll(npn);
-    else return -8;
-} 
-
-static int prc() {
-    /* inicio del procedimiento (no hace nada) */
-    return 0;
-}
-
-static int crp() {
-    /* final del procedimiento, se cierra el actual procedimiento y se ejecuta el siguiente de la pila */
-    prcdel();
-    prcexe();
-    return 0;
-}
-
-static int prg() {
-    /* inicio del programa (no hace nada) */
-    return 0;
-}
-
-static int grp() {
-    /* final del programa (no hace nada) */
-    return 0;
-}
-
-#define sval (&(execute->val))
-#define lvar (&(execute->var))
-#define mvar (&(pzero->var))
-
-static int linexe(struct token_s** lin) {
-    /* almacenamiento y ejecucion de una pila */
-    int err=0;
-    if(*lin) {
-        if(((*lin)->typ & (SPRC|SMAN))==0) {
-            struct token_s* tok=*lin;
-            while(tok && (tok->typ & (ELIN|EMAN|EPRC))==0) {
-                if((tok->typ & TVAL)) {
-                    vspush(&(execute->val),valcpy(tok->val));
-                } else if((tok->typ & TINS)) {
-                    ispush(&(execute->ins),tok->ins);
-                }
-                tok=tok->nxt;
-            }
-        }
-        Instruction i=NOI;
-        while(err==0 && (i=ispop(&(execute->ins)))!=NOI) {
-            switch(i) {
-                case(ADD):
-                    err=binary(sval,'+');
-                    break;
-                case(OP):
-                    err=unary(sval,'-');
-                    break;
-                case(PRD):
-                    err=binary(sval,'*');
-                    break;
-                case(INV):
-                    err=unary(sval,'/');
-                    break;
-                case(EQU):
-                    err=comp(sval,'=');
-                    break;
-                case(GRT):
-                    err=comp(sval,'>');
-                    break;
-                case(OUT):
-                    err=out(sval);
-                    break;
-                case(IN):
-                    err=in(sval);
-                    break;
-                case(NLN):
-                    err=nln();
-                    break;
-                case(TAB):
-                    err=tab();
-                    break;
-                case(LET):
-                    err=let(lvar,sval);
-                    break;
-                case(SET):
-                    err=set(lvar,mvar,sval);
-                    break;
-                case(GET):
-                    err=get(lvar,mvar,sval);
-                    break;
-                case(ARL):
-                    err=arl(lvar,sval);
-                    break;
-                case(ARS):
-                    err=ars(lvar,mvar,sval);
-                    break;
-                case(ARG):
-                    err=arg(lvar,mvar,sval);
-                    break;
-                case(JMP):
-                    err=jmp(sval,lin);
-                    break;
-                case(LAB):
-                    err=lab(sval);
-                    break;
-                case(IF):
-                    err=ifs(sval,lin);
-                    break;
-                case(FI):
-                    err=ife(sval);
-                    break;
-                case(CLL):
-                    err=call(sval);
-                    break;
-                case(PRC):
-                    err=prc();
-                    break;
-                case(CRP):
-                    err=crp();
-                    break;
-                case(PGR):
-                    err=prg();
-                    break;
-                case(RGP):
-                    err=grp();
-                    break;
-            }
-        }           
-    }
-    return err;
-}
-
-#undef sval
-#undef lvar
-
-
-static int prcnew(struct token_s* tok) {
-    /* se crea un nuevo procedimiento */
-    if(tok) {
-        struct procedure_s* prc=malloc(sizeof(struct procedure_s));
-        if(prc) {
-            ++procedures;
-            prc->ini=prc->lin=tok;
-            prc->var=NULL;
-            prc->nnl=0;
-            prc->prv=execute;
-            execute=prc;
-            if(!pzero) pzero=prc;
-            return 0;
-        } else return -1000;
-    } else return -7; /* procedimiento no encontrado */
-}
-
-int prcexe() {
-    int err=0;
-    if(execute) {
-        struct token_s* pl=execute->lin;
-        while(pl && err==0) {
-            err=linexe(&pl);
-            if(!execute->nnl) pl=linnxt(pl);
-            else execute->nnl=0;
-        }
-    }
-    return err;
-}          
-int prcdel() {
-    if(execute) {
-        --procedures;
-        struct procedure_s* tdel=execute;
-        execute=execute->prv;
-        varsdel(&(tdel->var));
-        vsdel(&(tdel->val));
-        isdel(&(tdel->ins));
-        free(tdel);
-        return 1;
-    }
-    return 0;
-}
     
-int prccll(Value nom) {
-    int err=0;
-    if((err=prcnew(prcfnd(nom)))==0) {
-        err=prcexe();
-        prcdel();
-    }
-    return err;
-}
 
-int prgexe() {
-    int err=0;
-    if((err=prcnew(program))==0) {
-        err=prcexe();
-        while(execute) prcdel();
-    }
-    prgdel();
-    return err;
-}
 
-int exeerr() {
-    return procedures;
-}
+
+
+
+
+
+            
+
+
+        
+
+
+
+    
+
+
+
+
+
+
+
+
+
+

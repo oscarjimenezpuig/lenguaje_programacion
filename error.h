@@ -13,7 +13,9 @@
  *  -10: imposible conseguir el valor de una variable
  *  -11: label no encontrado
  *  -12: if sin fi
- *  -13: nombre de fichero no aceptado
- *  -14: fichero no se puede abrir
+ *  -13: instruccion que necesita un valor
+ *  -14: lop sin pol
+ *  -100: nombre de fichero no aceptado
+ *  -101: fichero no se puede abrir
  *  -1000: no mas memoria
  */
