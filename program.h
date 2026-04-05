@@ -1,23 +1,36 @@
 /* LP 18-3-26 */
 
-#include "ula.h"
+#include "variable.h"
 
 /* program set */
 
-int tokins(Instruction ins);
-/* introduccion de un token del tipo instruccion */
+struct token_s {
+    struct {
+        char isi : 1;
+        char isv : 1;
+    };
+    union {
+        Instruction ins;
+        Value val;
+    };
+    struct token_s *prv,*nxt;
+};
 
-int tokval(char* str);
-/* introduccion de un token del tipo valor */
+typedef struct token_s* Token;
 
-int tokeol();
-/* introduccion de un token de salto de linea */
+typedef Token Program;
+
+extern Program program;
+
+int tokinsnew(Instruction i);
+/* crea un nuevo token insruccion y lo añade al programa */
+
+int tokvalnew(char* str);
+/* crea un token valor a partir de la cadena */
 
 void prgdel();
 /* libera el espacio del programa */
 
-/* program exe */
-
-int prgexe();
-/* ejecucion del programa */
+int prgerr();
+/* da el nuero de tokens no liberados del programa */
 

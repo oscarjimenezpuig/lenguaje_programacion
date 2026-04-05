@@ -42,3 +42,4 @@
 
 #define SINS (ENDINS-1) /* numero de instrucciones */
 
+typedef unsigned char Instruction;
