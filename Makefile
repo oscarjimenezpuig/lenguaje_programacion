@@ -82,6 +82,6 @@ check:
 #MAKEFILE VARIABLE
 
 NAME = lp 
-SCRS = value.c variable.c program.c execute.c#parser.c
+SCRS = value.c variable.c program.c execute.c parser.c master.c
 INCLUDES = #-lncurses #-lX11
 

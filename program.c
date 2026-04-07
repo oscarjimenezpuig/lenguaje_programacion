@@ -46,6 +46,15 @@ int tokvalnew(char* str) {
     } else return -1;
 }
 
+void tokprt(Token t) {
+    printf("Token= ");
+    if(t) {
+        if(t->isi) printf("I(%i)",t->ins);
+        else if(t->isv) printf("V(%s)",t->val);
+        else printf("Empty");
+    } else printf("Null");
+}
+
 static void tokdel(Token* t) {
     if(t && *t) {
         Token tt=*t;
@@ -57,6 +66,16 @@ static void tokdel(Token* t) {
     }
 }
 
+void prgprt() {
+    Token t=program;
+    while(t) {
+        tokprt(t);
+        printf(" -> ");
+        t=t->nxt;
+    }
+    printf("\n");
+}
+    
 void prgdel() {
     tokdel(&program);
     program=prglast=NULL;

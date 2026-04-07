@@ -4,52 +4,16 @@
 
 Prgexe execute=NULL;
 
-static int nodes=0;
 static int prcexes=0;
 
 static int endexe=0;
 
-int stkpsh(Stack* s,Value v) {
-    struct node_s* nn=malloc(sizeof(struct node_s));
-    if(nn) {
-        nn->val=v;
-        nn->prv=*s;
-        *s=nn;
-        ++nodes;
-        return 0;
-    } else  return -1;
-}
-
-Value stkpop(Stack* s) {
-    Value v=NULL;
-    if(s && *s) {
-        struct node_s* td=*s;
-        *s=td->prv;
-        v=td->val;
-        free(td);
-        --nodes;
-    }
-    return v;
-}
-
-static void nodel(struct node_s* n) {
-    if(n) {
-        nodel(n->prv);
-        valdel(&(n->val));
-        free(n);
-    }
-}
-
-void stkdel(Stack* s) {
-    nodel(*s);
-    *s=NULL;
-}
+static int tokexe(Value* a); /* predefinicion de tokexe */
 
 static int prgexenew(Token t) {
     Prgexe pn=malloc(sizeof(struct prcexe_s));
     if(pn) {
         pn->ini=pn->act=t;
-        pn->stk=NULL;
         pn->var=NULL;
         pn->prv=execute;
         execute=pn;
@@ -58,11 +22,28 @@ static int prgexenew(Token t) {
     } else return -1;
 }
 
-int prgmain() {
+static void prcdel(Prgexe prc) {
+    if(prc) {
+        prcdel(prc->prv);
+        varsdel(&(prc->var));
+        free(prc);
+        --prcexes;
+    }
+}
+
+static void prgexedel() {
+    /* libera todos los procedimientos */
+    prcdel(execute);
+    execute=NULL;
+}
+
+
+static int prgmain() {
+    /* inicio del procedimiento main */
     Token pt=program;
     while(pt) {
         if(pt->isi && pt->ins==PRG) {
-            return prgexenew(pt);
+            return prgexenew(pt->nxt);
         }
         pt=pt->nxt;
     }
@@ -85,12 +66,14 @@ static int inscall(Value* a) {
                 if(pt->isi && pt->ins==PRC) {
                     Token ptn=pt->nxt;
                     if(ptn->isv && valequ(nop,ptn->val)) {
+                        TOKUP;
                         err=prgexenew(ptn->nxt);
                         *a=VTRUE;
                     }
                 }
                 pt=pt->nxt;
             }
+            valdel(&nop);
         } else err=-4;
     }
     return err;
@@ -112,9 +95,12 @@ static int insendprc(Value* a) {
 
 static int insendmain(Value* a) {
     /* se cierra el procedimiento main */
+    int err=0;
     if(execute && !execute->prv) {
-        err=endprc(a);
-        if(err==0) endexe=1;
+        err=insendprc(a);
+        if(err==0) {
+            endexe=1;   
+        }
     } else err=-7;
     return err;
 }
@@ -143,14 +129,15 @@ static int insin(Value* a) {
             int ssoi=(int)valtonum(soi);
             valdel(&soi);
             char str[ssoi+1];
-            char ps=str;
+            char* ps=str;
             char c=0;
-            while(ps-str<ssoi && (c=getc())!='\n') {
+            while(ps-str<ssoi && (c=getchar())!='\n') {
                 *ps++=c;
             }
             *ps=EOS;
-            *a=valnew(str);
+            *a=valnew(0,str);
             TOKUP;
+            valdel(&soi);
         } else err=-9;
     }
     return err;
@@ -195,15 +182,36 @@ static int valexe(Value o,Value* a) {
     return 0;
 }
 
-int tokexe(Value* a) {
-     int err=0;
-     if(execute) {
-         Token t=execute->act;
-         if(t) {
-             if(t->isi) err=insexe(t->ins,a);
-             else if(t->isv) err=valexe(t->val,a);
-         } else err=-3;
-     }
-     return err;
- }
+static int tokexe(Value* a) {
+    /* se ejecuta el actual token del procedimiento */
+    int err=0;
+    if(execute) {
+        Token t=execute->act;
+        if(t) {
+            if(t->isi) err=insexe(t->ins,a);
+            else if(t->isv) err=valexe(t->val,a);
+        } else err=-3;
+    } else err=-10;
+    return err;
+}
+ 
+
+int prgexe() {
+    int err=prgmain();
+    while(!endexe && !err) {
+        Value a=NULL;
+        err=tokexe(&a);
+        valdel(&a);
+    }
+    prgexedel();
+    return err;
+}
+
+int prgexeerr() {
+    return prcexes;
+}
+            
+
+        
+
 

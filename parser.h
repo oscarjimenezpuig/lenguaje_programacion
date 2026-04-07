@@ -1,5 +1,5 @@
 /* LP 26-3-26 */
-#include "program.h"
+#include "execute.h"
 
 /* reglas
  * Instrucciones en todo MAYUSCULAS
@@ -15,7 +15,7 @@
 #define SEPR "END_PROCEDURE"
 #define SOUT "PRINT"
 #define SIN "INPUT"
-#define SNLN "NEWLINE"
+#define SNLN "NEW_LINE"
 #define STAB "TAB"
 #define SADD "+"
 #define SOP "-"
@@ -39,10 +39,9 @@
 
 #define INS {SPRG,SGRP,SCLL,SSPR,SEPR,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI,SLOP,SPOL,SREM}
 
-#define CSEP " [](){}" /* separadores */
-#define FDL '\n' /* final de linea */
+#define CSEP " [](){}\t\n" /* separadores */
 
 #define WMLEN 2048 /* maxima dimension de la palabra descargada */
 
-int make(char* name);
-/* lee el file del nombre y crea el programa */
+int parse(char* name);
+/* lee el file y crea el programa */

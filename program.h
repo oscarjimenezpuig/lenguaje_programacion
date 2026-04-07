@@ -23,14 +23,21 @@ typedef Token Program;
 extern Program program;
 
 int tokinsnew(Instruction i);
-/* crea un nuevo token insruccion y lo añade al programa */
+/* crea un nuevo token instruccion y lo añade al programa */
 
 int tokvalnew(char* str);
 /* crea un token valor a partir de la cadena */
+
+void tokprt(Token token);
+/* impresion de un token */
+
+void prgprt();
+/* impresion de todo el programa */
 
 void prgdel();
 /* libera el espacio del programa */
 
 int prgerr();
 /* da el nuero de tokens no liberados del programa */
+
 
