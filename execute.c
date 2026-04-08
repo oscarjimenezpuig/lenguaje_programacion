@@ -51,7 +51,7 @@ static int prgmain() {
 }
 
 #define TOKUP (execute->act=execute->act->nxt) /* avanza el token estudiado */
-#define VTRUE valnew(1,1) /* valor true */
+#define VTRUE NULL /* valor true */
 
 static int inscall(Value* a) {
     /* ejecucion de la instruccion inscall */
@@ -150,6 +150,37 @@ static int insnln(Value* a) {
     return 0;
 }
 
+static int insrem(Value* a) {
+    /* salta todos los valores del rem hasta la siguiente instruccion y los elimina */
+    Token t=NULL;
+    do {
+        t=TOKUP;
+    } while(t->isv);
+    *a=VTRUE;
+    return 0;
+}
+
+static int inslet(Value* a,char isarr) {
+    Value nov;
+    TOKUP;
+    int err=tokexe(&nov);
+    if(!err) {
+        unsigned int dim=0;
+        if(isarr) {
+            Value sdim;
+            TOKUP;
+            err=tokexe(&sdim);
+            if(!err) dim=valtonum(sdim);
+        } else dim=1;
+        if(dim) {
+            err=varnew(&(execute->var),nov,dim);
+            *a=VTRUE;
+            TOKUP;
+        }  else err=-12;
+    }
+    return err;
+}
+
 static int insexe(Instruction i,Value* a) {
     /* ejecucion de todas las instrucciones */
     int err=0;
@@ -172,6 +203,17 @@ static int insexe(Instruction i,Value* a) {
         case NLN:
             err=insnln(a);
             break;
+        case REM:
+            err=insrem(a);
+            break;
+        case LET:
+            err=inslet(a,0);
+            break;
+        case ARL:
+            err=inslet(a,1);
+            break;
+        default:
+            err=-11;
     }
     return err;
 }
@@ -194,13 +236,25 @@ static int tokexe(Value* a) {
     } else err=-10;
     return err;
 }
- 
+
+static int tokexeins(Value* a) {
+    /* se ejecuta el token que obligatoriamente ha de ser instruccion */
+    int err=0;
+    if(execute) {
+        Token t=execute->act;
+        if(t) {
+            if(t->isi) err=insexe(t->ins,a);
+            else err=-11;
+        } else err=-3;
+    } else err=-10;
+    return err;
+}
 
 int prgexe() {
     int err=prgmain();
     while(!endexe && !err) {
         Value a=NULL;
-        err=tokexe(&a);
+        err=tokexeins(&a);
         valdel(&a);
     }
     prgexedel();

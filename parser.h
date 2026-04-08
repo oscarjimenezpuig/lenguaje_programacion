@@ -39,7 +39,7 @@
 
 #define INS {SPRG,SGRP,SCLL,SSPR,SEPR,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI,SLOP,SPOL,SREM}
 
-#define CSEP " [](){}\t\n" /* separadores */
+#define CSEP " ,[](){}\t\n" /* separadores */
 
 #define WMLEN 2048 /* maxima dimension de la palabra descargada */
 

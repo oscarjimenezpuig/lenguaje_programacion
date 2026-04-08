@@ -11,6 +11,8 @@
  *  -008: No hay valor para imprimir
  *  -009: Falta el tamaño de las entradas del input
  *  -010: Finalizacion erronea del programa
+ *  -011: Se espera instruccion
+ *  -012: No se permite la creacion de variables de dimension 0
  *
  *  -100: nombre de fichero no aceptado
  *  -101: fichero no se puede abrir
