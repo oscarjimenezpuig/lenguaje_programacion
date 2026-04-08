@@ -13,6 +13,8 @@
  *  -010: Finalizacion erronea del programa
  *  -011: Se espera instruccion
  *  -012: No se permite la creacion de variables de dimension 0
+ *  -013: No se puede buscar variables en posicion negativa
+ *  -014: Variable no encontrada
  *
  *  -100: nombre de fichero no aceptado
  *  -101: fichero no se puede abrir

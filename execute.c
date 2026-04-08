@@ -181,6 +181,43 @@ static int inslet(Value* a,char isarr) {
     return err;
 }
 
+static Prgexe findmain() {
+    Prgexe pp=execute;
+    while(pp->prv) {
+        pp=pp->prv;
+    }
+    return pp;
+}
+
+static int insget(Value* a,char isarr) {
+    Value nov;
+    TOKUP;
+    int err=tokexe(&nov);
+    if(!err) {
+        int pos=-1;
+        if(isarr) {
+            Value spos;
+            TOKUP;
+            err=tokexe(&spos);
+            if(!err) pos=valtonum(spos);
+        } else pos=0;
+        if(pos>=0) {
+            Value val=varget(&(execute->var),nov,pos);
+            if(!val) {
+                Prgexe prcm=findmain();
+                val=varget(&(prcm->var),nov,pos);
+                if(!val) {
+                    err=-14;
+                } else {
+                    *a=val;
+                    TOKUP;
+                }
+            }
+        } else err=-13;
+    }
+    return err;
+}
+
 static int insexe(Instruction i,Value* a) {
     /* ejecucion de todas las instrucciones */
     int err=0;
@@ -211,6 +248,12 @@ static int insexe(Instruction i,Value* a) {
             break;
         case ARL:
             err=inslet(a,1);
+            break;
+        case GET:
+            err=insget(a,0);
+            break;
+        case ARG:
+            err=insget(a,1);
             break;
         default:
             err=-11;
