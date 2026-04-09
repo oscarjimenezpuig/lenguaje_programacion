@@ -9,12 +9,13 @@ static Token prglast=NULL;
 
 static int tokens=0;
 
-static Token toknew() {
+static Token toknew(char ieoi) {
     /* crea un nuevo apuntador a token */
     Token nt=malloc(sizeof(struct token_s));
     if(nt) {
-        ++tokens;
+        ++tokens;       
         nt->isi=nt->isv=0;
+        nt->ifi=ieoi;
         nt->ins=0;
         nt->nxt=NULL;
         nt->prv=prglast;
@@ -28,8 +29,8 @@ static Token toknew() {
     return nt;
 }
 
-int tokinsnew(Instruction i) {
-    Token nt=toknew();
+int tokinsnew(Instruction i,char iei) {
+    Token nt=toknew(iei);
     if(nt) {
         nt->isi=1;
         nt->ins=i;
@@ -37,8 +38,8 @@ int tokinsnew(Instruction i) {
     } else return -1;
 }
 
-int tokvalnew(char* str) {
-    Token nt=toknew();
+int tokvalnew(char* str,char iei) {
+    Token nt=toknew(iei);
     if(nt) {
         nt->isv=1;
         nt->val=valnew(0,str);
@@ -46,12 +47,17 @@ int tokvalnew(char* str) {
     } else return -1;
 }
 
+int tokempnew(char iei) {
+    if(toknew(iei)) return 0;
+    else return -1;
+}   
+
 void tokprt(Token t) {
     printf("Token= ");
     if(t) {
         if(t->isi) printf("I(%i)",t->ins);
         else if(t->isv) printf("V(%s)",t->val);
-        else printf("Empty");
+        if(t->ifi) printf("\n");
     } else printf("Null");
 }
 

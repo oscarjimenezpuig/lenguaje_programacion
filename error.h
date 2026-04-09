@@ -18,5 +18,4 @@
  *
  *  -100: nombre de fichero no aceptado
  *  -101: fichero no se puede abrir
- *  -1000: no mas memoria
  */

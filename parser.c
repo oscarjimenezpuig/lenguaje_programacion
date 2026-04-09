@@ -1,7 +1,16 @@
 /* LP 26-3-26 */
 #include "parser.h"
 
-typedef char Word[WMLEN+1];
+typedef struct {
+    char str[WMLEN+1]; /* palabra leida */
+    struct {
+        char ieoi : 1; /* es final de instruccion */
+        char icom : 1; /* se han abierto comillas */
+        char icap : 1; /* todo son mayusculas */
+        char iwem : 1; /* palabra vacia */
+        char ieop : 1; /* indica que es el final de programa */
+    };
+} Word;
 
 #define entcap(A) ((A)>='A' && (A)<='Z')
 
@@ -25,58 +34,82 @@ static char issep(char c) {
     return 0;
 }
 
-static char readword(FILE* file,char* cap,Word word) {
-    /* lee una palabra, devuelve 0 si hay final de archivo o 1 si no lo hay */
-    /* si capital es 1 es posible instruccion si no es valor */
-    char ret=-1;
-    *cap=1;
-    char* pw=word;
+static char isfin(char c) {
+    char* const SFIN=CFIN;
+    char* ps=SFIN;
+    while(*ps!=EOS) if(*ps++==c) return 1;
+    return 0;
+}
+
+static Word readword(FILE* file) {
+    /* lee una nueva palabra: word
+     * devuelve 1 si hay que continuar leyendo o 0 si no
+     */
+    Word word;
+    word.ieop=0;
+    word.icap=1;
+    word.iwem=1;
+    char* pw=word.str;
     char c=0;
     char comillas=0;
-    while(ret==-1) {
-        c=fgetc(file);
-        if(c=='"') {
-            if(comillas) ret=1;
-            else comillas=1;
-        }else if(c==EOF) {
-            ret=0;
-        }else if(issep(c) && !comillas) {
-            ret=1;
+    char stop=0;
+    while(!stop) {
+        c=fgetc(file)
+        word.icap=(word.icap==0)?0:entcap(c);
+        if(comillas) {  
+            if(c=='"') {
+                stop=1;
+            }
+            else {
+                *pw++=c;
+                word.iwem=1;
+            }
         } else {
-            if(!comillas && entcap(c)) *cap=(*cap==0)?0:1;
-            *pw++=c;
+            if(c=='"') {
+                comillas=1;
+                word.icom=1;
+            } else if(c==EOF) {
+                word.ieoi=1;
+                word.ieop=1;
+                stop=1;
+            } else if(isfin(c)) {
+                word.ieoi=1;
+                stop=1;
+            } else if(issep(c)) {
+                stop=1;
+            } else {
+                *pw++=c;
+                word.iwem=1;
+            }
         }
     }
     *pw=EOS;
-    return ret;
+    return word;
 }
 
-static unsigned char isins(Word word) {
+static Instruction isins(char* pins) {
     char* const STRINS[]=INS;
     for(int k=0;k<SINS;k++) {
-        if(valequ(word,STRINS[k])) return (k+1);
+        if(valequ(pins,STRINS[k])) return (k+1);
     }
     return 0;
 }
 
 static int readfile(FILE* file) {
-    char notend=0;
-    int err=0;
-    Word word;
+    Word w;
     do {
-        char cap=0;
-        notend=readword(file,&cap,word);
-        if(*word!=EOS) {
-            if(cap) {
-                Instruction ins=0;
-                if((ins=isins(word))) {
-                    err=tokinsnew(ins);
-                    continue;
-                }
-            }
-            err=tokvalnew(word);
+        w=readword(file);
+        if(w.iwem) {
+            err=tokemnew(w.ieoi);
+        } else {
+            char isval=(w.icom) || !(w.icap);
+            if(!isval) {
+                Instruction ins=isins(w.str);
+                if(ins) err=tokinsnew(ins,w.ieoi);
+                else err=tokvalnew(w.str,w,ieoi);
+            } else err=tokvalnew(w.str,w.ieoi);
         }
-    }while(notend && !err);
+    }while(!w.ieop && !err);
     return err;
 }
 

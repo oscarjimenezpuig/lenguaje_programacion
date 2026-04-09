@@ -6,8 +6,9 @@
 
 struct token_s {
     struct {
-        char isi : 1;
-        char isv : 1;
+        char isi : 1; /* token es instruccion */
+        char isv : 1; /* token es valor */
+        char ifi : 1; /* indica final de instruccion*/
     };
     union {
         Instruction ins;
@@ -22,11 +23,14 @@ typedef Token Program;
 
 extern Program program;
 
-int tokinsnew(Instruction i);
-/* crea un nuevo token instruccion y lo añade al programa */
+int tokinsnew(Instruction ins,char ieoi);
+/* token a partir de instruccion, ieoi indica si es el final de instruccion*/
 
-int tokvalnew(char* str);
-/* crea un token valor a partir de la cadena */
+int tokvalnew(Instruction ins,char ieoi);
+/* token a partir de valor, ieoi indica que es infal de instruccion */
+
+int tokempnew(char ieoi);
+/* token vacio, ieoi indica que es final de instruccion */
 
 void tokprt(Token token);
 /* impresion de un token */
