@@ -26,7 +26,7 @@ extern Program program;
 int tokinsnew(Instruction ins,char ieoi);
 /* token a partir de instruccion, ieoi indica si es el final de instruccion*/
 
-int tokvalnew(Instruction ins,char ieoi);
+int tokvalnew(char* str,char ieoi);
 /* token a partir de valor, ieoi indica que es infal de instruccion */
 
 int tokempnew(char ieoi);

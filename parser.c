@@ -4,11 +4,11 @@
 typedef struct {
     char str[WMLEN+1]; /* palabra leida */
     struct {
-        char ieoi : 1; /* es final de instruccion */
-        char icom : 1; /* se han abierto comillas */
-        char icap : 1; /* todo son mayusculas */
-        char iwem : 1; /* palabra vacia */
-        char ieop : 1; /* indica que es el final de programa */
+        unsigned char ieoi : 1; /* es final de instruccion */
+        unsigned char icom : 1; /* se han abierto comillas */
+        unsigned char icap : 1; /* todo son mayusculas */
+        unsigned char iwem : 1; /* palabra vacia */
+        unsigned char ieop : 1; /* indica que es el final de programa */
     };
 } Word;
 
@@ -41,28 +41,31 @@ static char isfin(char c) {
     return 0;
 }
 
+static void wordprt(Word w) {
+    printf("str=%s %i,%i,%i,%i,%i\n",w.str,w.ieoi,w.icom,w.icap,w.iwem,w.ieop);
+}
+
+
 static Word readword(FILE* file) {
     /* lee una nueva palabra: word
      * devuelve 1 si hay que continuar leyendo o 0 si no
      */
     Word word;
-    word.ieop=0;
-    word.icap=1;
-    word.iwem=1;
+    word.ieoi=word.icom=word.ieop=0;
+    word.icap=word.iwem=1;
     char* pw=word.str;
     char c=0;
     char comillas=0;
     char stop=0;
     while(!stop) {
-        c=fgetc(file)
-        word.icap=(word.icap==0)?0:entcap(c);
+        c=fgetc(file);
         if(comillas) {  
             if(c=='"') {
                 stop=1;
             }
             else {
                 *pw++=c;
-                word.iwem=1;
+                word.iwem=0;
             }
         } else {
             if(c=='"') {
@@ -79,7 +82,8 @@ static Word readword(FILE* file) {
                 stop=1;
             } else {
                 *pw++=c;
-                word.iwem=1;
+                word.iwem=0;
+                if(word.icap==0 || !entcap(c)) word.icap=0;
             }
         }
     }
@@ -96,18 +100,17 @@ static Instruction isins(char* pins) {
 }
 
 static int readfile(FILE* file) {
+    int err=0;
     Word w;
     do {
         w=readword(file);
+        wordprt(w);//dbg
         if(w.iwem) {
-            err=tokemnew(w.ieoi);
+            err=tokempnew(w.ieoi);
         } else {
-            char isval=(w.icom) || !(w.icap);
-            if(!isval) {
-                Instruction ins=isins(w.str);
-                if(ins) err=tokinsnew(ins,w.ieoi);
-                else err=tokvalnew(w.str,w,ieoi);
-            } else err=tokvalnew(w.str,w.ieoi);
+            Instruction ins=(w.icom==0 && w.icap==1 && isins(w.str));
+            if(ins) err=tokinsnew(ins,w.ieoi);
+            else err=tokvalnew(w.str,w.ieoi);
         }
     }while(!w.ieop && !err);
     return err;
