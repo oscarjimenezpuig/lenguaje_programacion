@@ -105,6 +105,7 @@ static int readfile(FILE* file) {
     Word w;
     do {
         w=readword(file);
+        wordprt(w);//dbg
         if(w.iwem) {
             if(w.ieoi) program->ifi=1;
         } else {

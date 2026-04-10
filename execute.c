@@ -58,7 +58,8 @@ static int tokup() {
             execute->act=ta->nxt;
             return 0;
         }
-    } else return -15;
+    }
+    return -15;
 }
 
 static int nxtin() {
@@ -82,25 +83,29 @@ static int nxtin() {
 static int inscall(Value* a) {
     /* ejecucion de la instruccion inscall */
     Value nop;
-    TOKUP;
-    int err=tokexe(&nop);
+    int err=tokup();
     if(!err) {
-        if(nop && *nop!=EOS) {
-            Token pt=program;
-            err=-5;
-            while(pt && err) {
-                if(pt->isi && pt->ins==PRC) {
-                    Token ptn=pt->nxt;
-                    if(ptn->isv && valequ(nop,ptn->val)) {
-                        TOKUP;
-                        err=prgexenew(ptn->nxt);
-                        *a=VTRUE;
+        tokexe(&nop);
+        if(!err) {
+            if(nop && *nop!=EOS) {
+                Token pt=program;
+                err=-5;
+                while(pt && err) {
+                    if(pt->isi && pt->ins==PRC) {
+                        Token ptn=pt->nxt;
+                        if(ptn->isv && valequ(nop,ptn->val)) {
+                            err=tokup();
+                            if(!err) {
+                                err=prgexenew(ptn->nxt);
+                                *a=VNUL;
+                            }
+                        }
                     }
+                    pt=pt->nxt;
                 }
-                pt=pt->nxt;
-            }
-            valdel(&nop);
-        } else err=-4;
+                valdel(&nop);
+            } else err=-4;
+        }
     }
     return err;
 }
@@ -114,7 +119,7 @@ static int insendprc(Value* a) {
         varsdel(&(todel->var));
         free(todel);
         --prcexes;
-        *a=VTRUE;
+        *a=VNUL;
     } else err=-6;
     return err;
 }
@@ -133,76 +138,81 @@ static int insendmain(Value* a) {
 
 static int insout(Value* a) {
     Value vtp;
-    TOKUP;
-    int err=tokexe(&vtp);
+    int err=tokup();
     if(!err) {
-        if(vtp) {
-            printf("%s",vtp);
-            valdel(&vtp);
-            *a=VTRUE;
-            TOKUP;
-        } else err=-8;
+        err=tokexe(&vtp);
+        if(!err) {
+            if(vtp) {
+                printf("%s",vtp);
+                valdel(&vtp);
+                *a=VNUL;
+                err=nxtin();
+            } else err=-8;
+        }
     }
     return err;
 }
 
 static int insin(Value* a) {
     Value soi;
-    TOKUP;
-    int err=tokexe(&soi);
+    int err=tokup();
     if(!err) {
-        if(soi) {
-            int ssoi=(int)valtonum(soi);
-            valdel(&soi);
-            char str[ssoi+1];
-            char* ps=str;
-            char c=0;
-            while(ps-str<ssoi && (c=getchar())!='\n') {
-                *ps++=c;
-            }
-            *ps=EOS;
-            *a=valnew(0,str);
-            TOKUP;
-            valdel(&soi);
-        } else err=-9;
+        err=tokexe(&soi);
+        if(!err) {
+            if(soi) {
+                int ssoi=(int)valtonum(soi);
+                valdel(&soi);
+                char str[ssoi+1];
+                char* ps=str;
+                char c=0;
+                while(ps-str<ssoi && (c=getchar())!='\n') {
+                    *ps++=c;
+                }
+                *ps=EOS;
+                *a=valnew(0,str);
+                err=nxtin();
+                valdel(&soi);
+            } else err=-9;
+        }
     }
     return err;
 }
 
 static int insnln(Value* a) {
     printf("\n");
-    *a=VTRUE;
-    TOKUP;
-    return 0;
+    *a=VNUL;
+    int err=nxtin();
+    return err;
 }
 
 static int insrem(Value* a) {
     /* salta todos los valores del rem hasta la siguiente instruccion y los elimina */
-    Token t=NULL;
-    do {
-        t=TOKUP;
-    } while(t->isv);
-    *a=VTRUE;
-    return 0;
+    int err=nxtin();
+    *a=VNUL;
+    return err;
 }
 
 static int inslet(Value* a,char isarr) {
     Value nov;
-    TOKUP;
-    int err=tokexe(&nov);
+    int err=tokup();
     if(!err) {
-        unsigned int dim=0;
-        if(isarr) {
-            Value sdim;
-            TOKUP;
-            err=tokexe(&sdim);
-            if(!err) dim=valtonum(sdim);
-        } else dim=1;
-        if(dim) {
-            err=varnew(&(execute->var),nov,dim);
-            *a=VTRUE;
-            TOKUP;
-        }  else err=-12;
+        err=tokexe(&nov);
+        if(!err) {
+            unsigned int dim=0;
+            if(isarr) {
+                Value sdim;
+                err=tokup();
+                if(!err) {
+                    err=tokexe(&sdim);
+                    if(!err) dim=valtonum(sdim);
+                }
+            } else dim=1;
+            if(dim) {
+                err=varnew(&(execute->var),nov,dim);
+                *a=VNUL;
+                err=nxtin();
+            }  else err=-12;
+        }
     }
     return err;
 }
@@ -217,15 +227,21 @@ static Prgexe findmain() {
 
 static int insget(Value* a,char isarr) {
     Value nov;
-    TOKUP;
-    int err=tokexe(&nov);
+    int err=tokup();
     if(!err) {
         int pos=-1;
-        if(isarr) {
-            Value spos;
-            TOKUP;
-            err=tokexe(&spos);
-            if(!err) pos=valtonum(spos);
+        err=tokexe(&nov);
+        if(!err) {
+            if(isarr) {
+                Value spos;
+                err=tokup();
+                if(!err) {
+                    err=tokexe(&spos);
+                    if(!err) {
+                        pos=valtonum(spos);
+                    }
+                }
+            }  
         } else pos=0;
         if(pos>=0) {
             Value val=varget(&(execute->var),nov,pos);
@@ -236,10 +252,12 @@ static int insget(Value* a,char isarr) {
                     err=-14;
                 } else {
                     *a=val;
-                    TOKUP;
+                    err=nxtin();
                 }
             }
-        } else err=-13;
+        } else {
+            err=-13;
+        }
     }
     return err;
 }
