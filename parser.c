@@ -43,7 +43,7 @@ static char isfin(char c) {
 }
 
 static void wordprt(Word w) {
-    printf("str=%s %i,%i,%i,%i\n",w.str,w.ieoi,w.icap,w.iwem,w.ieop);
+    printf("str=%s eoi=%i,cap=%i,emp=%i,eop=%i\n",w.str,w.ieoi,w.icap,w.iwem,w.ieop);
 }
 
 
@@ -105,9 +105,8 @@ static int readfile(FILE* file) {
     Word w;
     do {
         w=readword(file);
-        wordprt(w);//dbg
         if(w.iwem) {
-            err=tokempnew(w.ieoi);
+            if(w.ieoi) program->ifi=1;
         } else {
             Instruction ins=0;
             if(w.icap) ins=isins(w.str);

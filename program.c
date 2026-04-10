@@ -58,6 +58,7 @@ void tokprt(Token t) {
         if(t->isi) printf("I(%i)",t->ins);
         else if(t->isv) printf("V(%s)",t->val);
         if(t->ifi) printf("\n");
+        else printf(" -> ");
     } else printf("Null");
 }
 
@@ -76,7 +77,6 @@ void prgprt() {
     Token t=program;
     while(t) {
         tokprt(t);
-        printf(" -> ");
         t=t->nxt;
     }
     printf("\n");

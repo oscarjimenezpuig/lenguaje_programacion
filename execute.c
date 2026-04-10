@@ -50,8 +50,34 @@ static int prgmain() {
     return -2;
 }
 
-#define TOKUP (execute->act=execute->act->nxt) /* avanza el token estudiado */
-#define VTRUE NULL /* valor true */
+static int tokup() {
+    /* busca el siguiente token siempre y cuando no haya final de instruccion */
+    Token ta=execute->act;
+    if(!ta->ifi) { 
+        if(ta->nxt) {
+            execute->act=ta->nxt;
+            return 0;
+        }
+    } else return -15;
+}
+
+static int nxtin() {
+    /* busca el final de la instruccion actual y comprueba que hay una nueva instruccion */
+    Token t=execute->act;
+    while(t && t->ifi==0) {
+        t=t->nxt;
+    }
+    if(t && t->ifi) {
+        t=t->nxt;
+        if(t && t->isi) {
+            execute->act=t;
+            return 0;
+        }
+    }
+    return -11;
+}
+
+#define VNUL NULL /* valor nulo */
 
 static int inscall(Value* a) {
     /* ejecucion de la instruccion inscall */
