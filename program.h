@@ -29,8 +29,8 @@ int tokinsnew(Instruction ins,char ieoi);
 int tokvalnew(char* str,char ieoi);
 /* token a partir de valor, ieoi indica que es infal de instruccion */
 
-int tokempnew(char ieoi);
-/* token vacio, ieoi indica que es final de instruccion */
+void tokiseoi();
+/* hace que el ultimo token del programa se transforme en un fin de instruccion */
 
 void tokprt(Token token);
 /* impresion de un token */

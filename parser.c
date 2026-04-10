@@ -105,9 +105,8 @@ static int readfile(FILE* file) {
     Word w;
     do {
         w=readword(file);
-        wordprt(w);//dbg
         if(w.iwem) {
-            if(w.ieoi) program->ifi=1;
+            if(w.ieoi) tokiseoi();
         } else {
             Instruction ins=0;
             if(w.icap) ins=isins(w.str);

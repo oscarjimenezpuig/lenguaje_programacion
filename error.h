@@ -16,6 +16,7 @@
  *  -013: No se puede buscar variables en posicion negativa
  *  -014: Variable no encontrada
  *  -015: Se espera complemento de la instruccion y no se encuentra
+ *  -016: No se puede asignar valor a una variable
  *
  *  -100: nombre de fichero no aceptado
  *  -101: fichero no se puede abrir

@@ -94,7 +94,7 @@ static int inscall(Value* a) {
                     if(pt->isi && pt->ins==PRC) {
                         Token ptn=pt->nxt;
                         if(ptn->isv && valequ(nop,ptn->val)) {
-                            err=tokup();
+                            err=nxtin();
                             if(!err) {
                                 err=prgexenew(ptn->nxt);
                                 *a=VNUL;
@@ -170,7 +170,6 @@ static int insin(Value* a) {
                 }
                 *ps=EOS;
                 *a=valnew(0,str);
-                err=nxtin();
                 valdel(&soi);
             } else err=-9;
         }
@@ -262,6 +261,46 @@ static int insget(Value* a,char isarr) {
     return err;
 }
 
+static int insset(Value* a,char isarr) {
+    Value nov;
+    int err=tokup();
+    if(!err) {
+        int pos=-1;
+        err=tokexe(&nov);
+        if(!err) {
+            if(isarr) {
+                Value spos;
+                err=tokup();
+                if(!err) {
+                    err=tokexe(&spos);
+                    if(!err) {
+                        pos=valtonum(spos);
+                    }
+                }
+            }
+        } else pos=0;
+        if(pos>=0) {
+            Value val;
+            int err=tokup();
+            if(!err) {
+                err=tokexe(&val);
+                if(!err) {
+                    if(!varset(&(execute->var),nov,pos,val)) {
+                        Prgexe prcm=findmain();
+                        if(!varset(&(prcm->var),nov,pos,val)) {
+                            err=-16;
+                        }
+                        *a=VNUL;
+                        err=nxtin();
+
+                    }
+                }
+            }
+        }
+    }
+    return err;
+}                   
+
 static int insexe(Instruction i,Value* a) {
     /* ejecucion de todas las instrucciones */
     int err=0;
@@ -295,6 +334,9 @@ static int insexe(Instruction i,Value* a) {
             break;
         case GET:
             err=insget(a,0);
+            break;
+        case SET:
+            err=insset(a,0);
             break;
         case ARG:
             err=insget(a,1);

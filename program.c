@@ -47,10 +47,9 @@ int tokvalnew(char* str,char iei) {
     } else return -1;
 }
 
-int tokempnew(char iei) {
-    if(toknew(iei)) return 0;
-    else return -1;
-}   
+void tokiseoi() {
+    if(prglast) prglast->ifi=1;
+}
 
 void tokprt(Token t) {
     printf("Token= ");
