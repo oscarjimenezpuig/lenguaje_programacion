@@ -1,18 +1,19 @@
 /* LP 26-3-26 */
 #include "parser.h"
 
+typedef unsigned char uchar;
+
 typedef struct {
     char str[WMLEN+1]; /* palabra leida */
     struct {
-        unsigned char ieoi : 1; /* es final de instruccion */
-        unsigned char icom : 1; /* se han abierto comillas */
-        unsigned char icap : 1; /* todo son mayusculas */
-        unsigned char iwem : 1; /* palabra vacia */
-        unsigned char ieop : 1; /* indica que es el final de programa */
+        uchar ieoi : 1; /* es final de instruccion */
+        uchar icap : 1; /* todo son mayusculas */
+        uchar iwem : 1; /* palabra vacia */
+        uchar ieop : 1; /* indica que es el final de programa */
     };
 } Word;
 
-#define entcap(A) ((A)>='A' && (A)<='Z')
+#define entcap(A) (((A)>='A' && (A)<='Z') || (A)=='_')
 
 static FILE* openfile(char* name) {
     /* se abre archivo */
@@ -42,7 +43,7 @@ static char isfin(char c) {
 }
 
 static void wordprt(Word w) {
-    printf("str=%s %i,%i,%i,%i,%i\n",w.str,w.ieoi,w.icom,w.icap,w.iwem,w.ieop);
+    printf("str=%s %i,%i,%i,%i\n",w.str,w.ieoi,w.icap,w.iwem,w.ieop);
 }
 
 
@@ -51,7 +52,7 @@ static Word readword(FILE* file) {
      * devuelve 1 si hay que continuar leyendo o 0 si no
      */
     Word word;
-    word.ieoi=word.icom=word.ieop=0;
+    word.ieoi=word.ieop=0;
     word.icap=word.iwem=1;
     char* pw=word.str;
     char c=0;
@@ -70,7 +71,7 @@ static Word readword(FILE* file) {
         } else {
             if(c=='"') {
                 comillas=1;
-                word.icom=1;
+                word.icap=0;
             } else if(c==EOF) {
                 word.ieoi=1;
                 word.ieop=1;
@@ -108,7 +109,8 @@ static int readfile(FILE* file) {
         if(w.iwem) {
             err=tokempnew(w.ieoi);
         } else {
-            Instruction ins=(w.icom==0 && w.icap==1 && isins(w.str));
+            Instruction ins=0;
+            if(w.icap) ins=isins(w.str);
             if(ins) err=tokinsnew(ins,w.ieoi);
             else err=tokvalnew(w.str,w.ieoi);
         }
