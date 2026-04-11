@@ -1,0 +1,13 @@
+PROGRAM
+	LET var
+	SET var 1.2
+	CALL Print
+END_PROGRAM
+
+PROCEDURE Print
+    LET var
+    SET var 2.2
+    PRINT "El resultado es="
+    PRINT GET var
+	NEW_LINE
+END_PROCEDURE
