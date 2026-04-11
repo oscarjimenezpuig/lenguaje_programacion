@@ -240,22 +240,22 @@ static int insget(Value* a,char isarr) {
                         pos=valtonum(spos);
                     }
                 }
-            }  
-        } else pos=0;
-        if(pos>=0) {
-            Value val=varget(&(execute->var),nov,pos);
-            if(!val) {
-                Prgexe prcm=findmain();
-                val=varget(&(prcm->var),nov,pos);
+            } else pos=0;  
+            if(pos>=0) {
+                Value val=varget(&(execute->var),nov,pos);
                 if(!val) {
-                    err=-14;
-                } else {
-                    *a=val;
-                    err=nxtin();
+                    Prgexe prcm=findmain();
+                    val=varget(&(prcm->var),nov,pos);
+                    if(!val) {
+                        err=-14;
+                    } else {
+                        *a=val;
+                        err=nxtin();
+                    }
                 }
+            } else {
+                err=-13;
             }
-        } else {
-            err=-13;
         }
     }
     return err;
@@ -277,25 +277,26 @@ static int insset(Value* a,char isarr) {
                         pos=valtonum(spos);
                     }
                 }
-            }
-        } else pos=0;
-        if(pos>=0) {
-            Value val;
-            int err=tokup();
-            if(!err) {
-                err=tokexe(&val);
+            } else pos=0;
+            if(pos>=0) {
+                Value val;
+                int err=tokup();
                 if(!err) {
-                    if(!varset(&(execute->var),nov,pos,val)) {
-                        Prgexe prcm=findmain();
-                        if(!varset(&(prcm->var),nov,pos,val)) {
-                            err=-16;
+                    err=tokexe(&val);
+                    if(!err) {
+                        if(!varset(&(execute->var),nov,pos,val)) {
+                            Prgexe prcm=findmain();
+                            if(prcm==execute || !varset(&(prcm->var),nov,pos,val)) {
+                                err=-16;
+                            }
                         }
-                        *a=VNUL;
-                        err=nxtin();
-
+                        if(!err) {
+                            *a=VNUL;
+                            err=nxtin();
+                        }
                     }
                 }
-            }
+            } else err=-13;
         }
     }
     return err;

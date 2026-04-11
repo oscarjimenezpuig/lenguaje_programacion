@@ -116,7 +116,7 @@ int varset(Variable* var,char* nom,unsigned int pos,Value val) {
 
 Value varget(Variable* var,char* nom,unsigned int pos) {
     Value ret=NULL;
-    struct variable_s* pv=NULL;
+    struct variable_s* pv=*var;
     if(var && nom && pv) {
         int counter=0;
         while(counter++!=pos && pv) pv=pv->nxt;
