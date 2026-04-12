@@ -17,6 +17,10 @@
  *  -014: Variable no encontrada
  *  -015: Se espera complemento de la instruccion y no se encuentra
  *  -016: No se puede asignar valor a una variable
+ *  -017: Se pierde valor reclamado
+ *  -018: No encontrado el label
+ *  -019: label sin nombre
+ *  -020: No se cierran condicionales
  *
  *  -100: nombre de fichero no aceptado
  *  -101: fichero no se puede abrir

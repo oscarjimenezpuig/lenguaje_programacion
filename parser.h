@@ -17,12 +17,12 @@
 #define SIN "INPUT"
 #define SNLN "NEW_LINE"
 #define STAB "TAB"
-#define SADD "+"
-#define SOP "-"
-#define SPRD "*"
-#define SINV "/"
-#define SEQU "="
-#define SGRT ">"
+#define SADD "ADD"
+#define SOP "OP"
+#define SPRD "PRD"
+#define SINV "INV"
+#define SEQU "EQUAL"
+#define SGRT "GRT"
 #define SLET "LET"
 #define SSET "SET"
 #define SGET "GET"
@@ -36,8 +36,11 @@
 #define SLOP "LOOP"
 #define SPOL "END_LOOP"
 #define SREM "REM"
+#define SAND "AND"
+#define SOR "OR"
+#define SNOT "NOT"
 
-#define INS {SPRG,SGRP,SCLL,SSPR,SEPR,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI,SLOP,SPOL,SREM}
+#define INS {SPRG,SGRP,SCLL,SSPR,SEPR,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI,SLOP,SPOL,SREM,SAND,SOR,SNOT}
 
 #define CSEP " ,[](){}\t" /* separadores */
 #define CFIN ":\n" /* caracteres de fin de instruccion */

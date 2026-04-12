@@ -36,8 +36,11 @@
 #define LOP 26 /* inicio de loop */
 #define POL 27 /* final de loop */
 #define REM 28 /* comentario */
+#define AND 29 /* orden and */
+#define OR 30 /* orden or */
+#define NOT 31 /* orden not */
 
-#define ENDINS 29 /* marca el final de las instrucciones */
+#define ENDINS 32 /* marca el final de las instrucciones */
 
 
 #define SINS (ENDINS-1) /* numero de instrucciones */

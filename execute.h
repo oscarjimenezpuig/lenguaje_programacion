@@ -2,6 +2,8 @@
 
 #include "program.h"
 
+#define TABSPC 4 /* numero de espacios del tab */
+
 struct prcexe_s {
     Token ini,act; /* describe el token inicial del procedimiento y el actual */
     Variable var;

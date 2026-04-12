@@ -1,13 +1,11 @@
 PROGRAM
-	LET var
-	SET var 1.2
-	CALL Print
+    LET contador
+    SET contador 10
+    LABEL retorno
+    PRINT "HOLA MUNDO":NEW_LINE
+    IF (GRT (GET contador) 0)
+        SET contador ADD (GET contador) (OP 1)
+        JUMP retorno
+    END_IF
 END_PROGRAM
 
-PROCEDURE Print
-    LET var
-    SET var 2.2
-    PRINT "El resultado es="
-    PRINT GET var
-	NEW_LINE
-END_PROCEDURE

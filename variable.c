@@ -120,7 +120,7 @@ Value varget(Variable* var,char* nom,unsigned int pos) {
     if(var && nom && pv) {
         int counter=0;
         while(counter++!=pos && pv) pv=pv->nxt;
-        if(pv) ret=pv->val;
+        if(pv) ret=valcpy(pv->val);
     }
     return ret;
 }

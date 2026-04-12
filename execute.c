@@ -184,6 +184,13 @@ static int insnln(Value* a) {
     return err;
 }
 
+static int instab(Value* a) {
+    for(int k=0;k<TABSPC;k++) printf(" ");
+    *a=VNUL;
+    int err=nxtin();
+    return err;
+}
+
 static int insrem(Value* a) {
     /* salta todos los valores del rem hasta la siguiente instruccion y los elimina */
     int err=nxtin();
@@ -252,6 +259,8 @@ static int insget(Value* a,char isarr) {
                         *a=val;
                         err=nxtin();
                     }
+                } else {
+                    *a=val;
                 }
             } else {
                 err=-13;
@@ -300,8 +309,202 @@ static int insset(Value* a,char isarr) {
         }
     }
     return err;
-}                   
+}
 
+static double bopnum(char op,Value a,Value b) {
+    /* operaciones numericas */
+    double da=valtonum(a);
+    double db=valtonum(b);
+    switch(op) {
+        case '+':
+            return da+db;
+        case '*':
+            return da*db;
+    }
+    return 0;
+}
+
+static char bopbol(char op,Value a,Value b) {
+    int da=valisfalse(a)?0:1;
+    int db=valisfalse(b)?0:1;
+    switch(op) {
+        case '&':
+            return (da & db)?'1':'0';
+        case '|':
+            return (da | db)?'1':'0';
+    }
+    return '0';
+}
+
+static double bopcmp(char op,Value a,Value b) {
+    if(op=='=') {
+        return valequ(a,b)?1:0;
+    } else {
+        if(op=='>') {
+            double da=valtonum(a);
+            double db=valtonum(b);
+            return (da>db)?1:0;
+        } else return 0;
+    }
+}
+
+static int insbin(Instruction i,Value* a) {
+    /* evaluacion de operaciones binarias */
+    Value pv,sv;
+    int err=0;
+    *a=VNUL;
+    if(!(err=tokup()) && !(err=tokexe(&pv)) && !(err=tokup()) && !(err=tokexe(&sv))) {
+        switch(i) {
+            case ADD:
+                *a=valnew(1,bopnum('+',pv,sv));
+                break;
+            case PRD:
+                *a=valnew(1,bopnum('*',pv,sv));
+                break;
+            case AND:
+                *a=valnew(1,bopbol('&',pv,sv));
+                break;
+            case OR:
+                *a=valnew(1,bopbol('|',pv,sv));
+                break;
+            case EQU:
+                *a=valnew(1,bopcmp('=',pv,sv));
+                break;
+            case GRT:
+                *a=valnew(1,bopcmp('>',pv,sv));
+                break;
+        }
+        valdel(&pv);
+        valdel(&sv);
+    }
+    return err;
+}
+
+static double uopnum(char op,Value a) {
+    double da=valtonum(a);
+    switch(op) {
+        case '-':
+            return -da;
+        case '/':
+            return 1/da;
+    }
+    return 0;
+}
+
+static double uopbol(char op,Value a) {
+    int da=valtonum(a);
+    switch(op) {
+        case '~':
+            return (da)?0:1;
+    }
+    return 0;
+}
+
+static int insuni(Instruction i,Value* a) {
+    /* evaluacion de operaciones unarias */
+    Value val;
+    int err=0;
+    *a=VNUL;
+    if(!(err=tokup()) && !(err=tokexe(&val))) {
+        switch(i) {
+            case OP:
+                *a=valnew(1,uopnum('-',val));
+                break;
+            case INV:
+                *a=valnew(1,uopnum('/',val));
+                break;
+            case NOT:
+                *a=valnew(1,uopbol('~',val));
+                break;
+        }
+        valdel(&val);
+    }
+    return err;
+}
+
+static int inslab(Value* a) {
+    /* instruccion label (no hace nada) */
+    *a=VNUL;
+    int err=nxtin();
+    return err;
+}
+
+static int insjmp(Value* a) {
+    /* salto */
+    Value nol;
+    int err=tokup();
+    if(!err) {
+        err=tokexe(&nol);
+        if(!err) {
+            Token jmp=NULL;
+            Token pt=execute->ini;
+            while(pt) {
+                if(pt->isi) {
+                    if(pt->ins==CRP) pt=NULL;
+                    else if(pt->ins==LAB) {
+                        pt=pt->nxt;
+                        if(pt && pt->isv) {
+                            if(valequ(pt->val,nol)) {
+                                jmp=pt->prv;
+                            }
+                        } else {
+                            err=-19;
+                        }
+                    }
+                }
+                if(pt) pt=pt->nxt;
+            }
+            if(!jmp) err=-18;
+            else {
+                execute->act=jmp;
+                *a=VNUL;
+            }
+        }
+    }
+    return err;
+}
+
+static int insfi(Value* a) {
+    /* se encuentra final de condicional, no hace nada */
+    *a=VNUL;
+    int err=nxtin();
+    return err;
+}
+
+static int insif(Value* a) {
+    /* se encuentra condicional */
+    Value cnd=NULL;
+    int err=0;
+    *a=VNUL;
+    if(!(err=tokup()) && !(err=tokexe(&cnd))) {
+        if(valisfalse(cnd)) {
+            int conds=1;
+            Token pt=execute->act;
+            Token jmp=NULL;
+            while(pt && !jmp) {
+                if(pt->isi) {
+                    if(pt->ins==IF) ++conds;
+                    else if(pt->ins==FI) {
+                        --conds;
+                        if(conds==0) {
+                            jmp=pt;
+                        }
+                    } else if(pt->ins==CRP) pt=NULL;
+                }
+                if(pt) pt=pt->nxt;
+            }
+            if(jmp) {
+                execute->act=jmp;
+            } else {
+                err=-20;
+            }
+        } else {
+            err=nxtin();
+        }
+    }
+    return err;
+}
+        
 static int insexe(Instruction i,Value* a) {
     /* ejecucion de todas las instrucciones */
     int err=0;
@@ -324,6 +527,9 @@ static int insexe(Instruction i,Value* a) {
         case NLN:
             err=insnln(a);
             break;
+        case TAB:
+            err=instab(a);
+            break;
         case REM:
             err=insrem(a);
             break;
@@ -341,6 +547,31 @@ static int insexe(Instruction i,Value* a) {
             break;
         case ARG:
             err=insget(a,1);
+            break;
+        case ADD:
+        case PRD:
+        case AND:
+        case OR:
+        case EQU:
+        case GRT:
+            err=insbin(i,a);
+            break;
+        case OP:
+        case INV:
+        case NOT:
+            err=insuni(i,a);
+            break;
+        case LAB:
+            err=inslab(a);
+            break;
+        case JMP:
+            err=insjmp(a);
+            break;
+        case IF:
+            err=insif(a);
+            break;
+        case FI:
+            err=insfi(a);
             break;
         default:
             err=-11;
@@ -385,7 +616,10 @@ int prgexe() {
     while(!endexe && !err) {
         Value a=NULL;
         err=tokexeins(&a);
-        valdel(&a);
+        if(a) {
+            valdel(&a);
+            err=-17; /* si llega un valor diferente al nulo, error */
+        }
     }
     prgexedel();
     return err;

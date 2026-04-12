@@ -89,7 +89,8 @@ double valtonum(Value v) {
 }
 
 int valisfalse(Value v) {
-    if(v && *v=='0' && *(v+1)==EOS) return 1;
+    double dv=valtonum(v);
+    if(dv==0) return 1;
     return 0;
 }
 

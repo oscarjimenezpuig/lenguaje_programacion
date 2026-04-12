@@ -1,6 +1,6 @@
 /* LP 14-3-26 */
 
-/* Un valor es una cadena de caracteres donde se guardan dos caracters por byte */
+/* Un valor es una cadena de caracteres */
 
 #include "instructions.h"
 
