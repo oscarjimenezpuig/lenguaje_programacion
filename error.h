@@ -21,7 +21,8 @@
  *  -018: No encontrado el label
  *  -019: label sin nombre
  *  -020: No se cierran condicionales
- *
+ *  -021: Loop abierto no cerrado
+ *  -022: Loop cerrado no abierto
  *  -100: nombre de fichero no aceptado
  *  -101: fichero no se puede abrir
  */

@@ -14,7 +14,6 @@ int main(int args,char* arg[]) {
             err=prgexe();
         }
         CNF;
-        prgdel();
     } else err=-100;
     if(err==0) printf("SUCCESS\n");
     else printf("ERROR: %i\n",err);

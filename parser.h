@@ -26,21 +26,26 @@
 #define SLET "LET"
 #define SSET "SET"
 #define SGET "GET"
-#define SARL "ARRAY"
-#define SARS "ARRAY_SET"
-#define SARG "ARRAY_GET"
+#define SARL "ALET"
+#define SARS "ASET"
+#define SARG "AGET"
 #define SJMP "JUMP"
 #define SLAB "LABEL"
 #define SIF "IF"
 #define SFI "END_IF"
-#define SLOP "LOOP"
+#define SLOP "LOOP_IF"
 #define SPOL "END_LOOP"
 #define SREM "REM"
 #define SAND "AND"
 #define SOR "OR"
 #define SNOT "NOT"
+#define SMOV "MOVE"
+#define SINC "INC"
+#define SDEC "DEC"
+#define SMOD "MOD"
+#define SRND "RND"
 
-#define INS {SPRG,SGRP,SCLL,SSPR,SEPR,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI,SLOP,SPOL,SREM,SAND,SOR,SNOT}
+#define INS {SPRG,SGRP,SCLL,SSPR,SEPR,SOUT,SIN,SNLN,STAB,SADD,SOP,SPRD,SINV,SEQU,SGRT,SLET,SSET,SGET,SARL,SARS,SARG,SJMP,SLAB,SIF,SFI,SLOP,SPOL,SREM,SAND,SOR,SNOT,SMOD,SRND}
 
 #define CSEP " ,[](){}\t" /* separadores */
 #define CFIN ":\n" /* caracteres de fin de instruccion */

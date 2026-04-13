@@ -211,6 +211,7 @@ static int inslet(Value* a,char isarr) {
                 if(!err) {
                     err=tokexe(&sdim);
                     if(!err) dim=valtonum(sdim);
+                    valdel(&sdim);
                 }
             } else dim=1;
             if(dim) {
@@ -219,6 +220,7 @@ static int inslet(Value* a,char isarr) {
                 err=nxtin();
             }  else err=-12;
         }
+        valdel(&nov);
     }
     return err;
 }
@@ -246,6 +248,7 @@ static int insget(Value* a,char isarr) {
                     if(!err) {
                         pos=valtonum(spos);
                     }
+                    valdel(&spos);
                 }
             } else pos=0;  
             if(pos>=0) {
@@ -266,6 +269,7 @@ static int insget(Value* a,char isarr) {
                 err=-13;
             }
         }
+        valdel(&nov);
     }
     return err;
 }
@@ -285,6 +289,7 @@ static int insset(Value* a,char isarr) {
                     if(!err) {
                         pos=valtonum(spos);
                     }
+                    valdel(&spos);
                 }
             } else pos=0;
             if(pos>=0) {
@@ -307,8 +312,26 @@ static int insset(Value* a,char isarr) {
                 }
             } else err=-13;
         }
+        valdel(&nov);
     }
     return err;
+}
+
+static int mod(double da,double db) {
+    int ia=(int) da;
+    int ib=(int) db;
+    if(ib!=0) {
+        return ia%ib;
+    } else return 0;
+}
+
+static int rnd(double da,double db) {
+    int ia=(int)da;
+    int ib=(int)db;
+    int g=(ia>ib)?ia:ib;
+    int p=(g==ia)?ib:ia;
+    int dif=g-p+1;
+    return (rand()%dif)+p;
 }
 
 static double bopnum(char op,Value a,Value b) {
@@ -320,6 +343,10 @@ static double bopnum(char op,Value a,Value b) {
             return da+db;
         case '*':
             return da*db;
+        case '%':
+            return mod(da,db);
+        case 'r':
+            return rnd(da,db);
     }
     return 0;
 }
@@ -360,6 +387,12 @@ static int insbin(Instruction i,Value* a) {
                 break;
             case PRD:
                 *a=valnew(1,bopnum('*',pv,sv));
+                break;
+            case MOD:
+                *a=valnew(1,bopnum('%',pv,sv));
+                break;
+            case RND:
+                *a=valnew(1,bopnum('r',pv,sv));
                 break;
             case AND:
                 *a=valnew(1,bopbol('&',pv,sv));
@@ -440,7 +473,7 @@ static int insjmp(Value* a) {
             Token pt=execute->ini;
             while(pt) {
                 if(pt->isi) {
-                    if(pt->ins==CRP) pt=NULL;
+                    if(pt->ins==CRP || pt->ins==GRP) pt=NULL;
                     else if(pt->ins==LAB) {
                         pt=pt->nxt;
                         if(pt && pt->isv) {
@@ -460,6 +493,7 @@ static int insjmp(Value* a) {
                 *a=VNUL;
             }
         }
+        valdel(&nol);
     }
     return err;
 }
@@ -489,7 +523,7 @@ static int insif(Value* a) {
                         if(conds==0) {
                             jmp=pt;
                         }
-                    } else if(pt->ins==CRP) pt=NULL;
+                    } else if(pt->ins==CRP || pt->ins==GRP) pt=NULL;
                 }
                 if(pt) pt=pt->nxt;
             }
@@ -501,10 +535,68 @@ static int insif(Value* a) {
         } else {
             err=nxtin();
         }
+        valdel(&cnd);
     }
     return err;
 }
-        
+
+static int inspol(Value* a) {
+    /* fin de la instruccion loop, regresa al condicional de inicio*/
+    int err=0;
+    int cond=0;
+    Token pt=execute->act;
+    do {
+        if(pt) {
+            if(pt->isi) {
+                if(pt->ins==PRC || pt->ins==PRG) err=-22;
+                else if(pt->ins==POL) ++cond;
+                else if(pt->ins==LOP) {
+                    --cond;
+                    if(cond==0) {
+                        execute->act=pt;
+                        *a=VNUL;
+                    }
+                }
+            }
+            pt=pt->prv;
+        } else err=-22;
+    }while(cond && !err);
+    return err;
+}
+
+static int inslop(Value* a) {
+    /* instruccion loop, requiere valor booleano */
+    *a=VNUL;
+    int err=0;
+    Value cnd;
+    if((err=tokup())==0 && (err=tokexe(&cnd))==0) {
+        if(valisfalse(cnd)) {
+            int cond=1;
+            Token pt=execute->act;
+            while(cond && !err) {
+                if(pt) {
+                    if(pt->isi) {
+                        if(pt->ins==CRP || pt->ins==GRP) err=-21;
+                        else if(pt->ins==LOP) ++cond;
+                        else if(pt->ins==POL) {
+                            --cond;
+                            if(cond==0) {
+                                execute->act=pt;
+                                err=nxtin();
+                            }
+                        }
+                    }
+                    pt=pt->nxt;
+                } else err=-21;
+            }
+        } else {
+            err=nxtin();
+        }
+        valdel(&cnd);
+    }
+    return err;
+}
+
 static int insexe(Instruction i,Value* a) {
     /* ejecucion de todas las instrucciones */
     int err=0;
@@ -554,6 +646,8 @@ static int insexe(Instruction i,Value* a) {
         case OR:
         case EQU:
         case GRT:
+        case MOD:
+        case RND:
             err=insbin(i,a);
             break;
         case OP:
@@ -572,6 +666,12 @@ static int insexe(Instruction i,Value* a) {
             break;
         case FI:
             err=insfi(a);
+            break;
+        case LOP:
+            err=inslop(a);
+            break;
+        case POL:
+            err=inspol(a);
             break;
         default:
             err=-11;
@@ -611,6 +711,14 @@ static int tokexeins(Value* a) {
     return err;
 }
 
+static int frees() {
+    int a[4]={valerr(),varerr(),prgerr(),prgexeerr()};
+    int total=0;
+    for(int k=0;k<4;k++) total+=a[k];
+    if(total>0) printf("NO LIBERADOS Val=%i Var=%i Prg=%i Exe=%i\n",a[0],a[1],a[2],a[3]);
+    return total;
+}
+
 int prgexe() {
     int err=prgmain();
     while(!endexe && !err) {
@@ -622,6 +730,9 @@ int prgexe() {
         }
     }
     prgexedel();
+    prgdel();
+    int ndm=frees();
+    if(ndm>0) err=ndm;
     return err;
 }
 

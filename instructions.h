@@ -39,9 +39,10 @@
 #define AND 29 /* orden and */
 #define OR 30 /* orden or */
 #define NOT 31 /* orden not */
+#define MOD 32 /* define el modulo de una division entera */
+#define RND 33 /* numero aleatorio entre dos numero enteros donde ambos estan incluidos */
 
-#define ENDINS 32 /* marca el final de las instrucciones */
-
+#define ENDINS 34 /* marca el final de las instrucciones */
 
 #define SINS (ENDINS-1) /* numero de instrucciones */
 
