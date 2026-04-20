@@ -184,6 +184,13 @@ static int insnln(Value* a) {
     return err;
 }
 
+static int insclr(Value* a) {
+    system("clear");
+    *a=VNUL;
+    int err=nxtin();
+    return err;
+}
+
 static int instab(Value* a) {
     for(int k=0;k<TABSPC;k++) printf(" ");
     *a=VNUL;
@@ -618,6 +625,9 @@ static int insexe(Instruction i,Value* a) {
             break;
         case NLN:
             err=insnln(a);
+            break;
+        case CLR:
+            err=insclr(a);
             break;
         case TAB:
             err=instab(a);
